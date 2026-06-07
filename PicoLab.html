@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PicoLab — Visual STEM Coach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: #F7F8F4;
+      color: #263238;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* ─── Scrollbar ───────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D4D9CF; border-radius: 3px; }
+
+    /* ─── App shell ───────────────────────────────────────────── */
+    .p-app { display: flex; height: 100vh; overflow: hidden; }
+    .p-sidebar {
+      width: 222px; flex-shrink: 0;
+      border-right: 1.5px solid #E1E6DB;
+      background: #FFFFFF;
+      display: flex; flex-direction: column;
+      height: 100vh; overflow-y: auto;
+      padding: 18px 10px;
+    }
+    .p-content { flex: 1; overflow: hidden; display: flex; height: 100vh; }
+
+    /* ─── Navigation ──────────────────────────────────────────── */
+    .p-nav {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 12px; border-radius: 10px;
+      cursor: pointer; color: #5F6468;
+      font-size: 13.5px; font-weight: 500;
+      transition: background 0.12s, color 0.12s;
+      user-select: none; white-space: nowrap;
+    }
+    .p-nav:hover { background: #F1F3ED; color: #263238; }
+    .p-nav.active { background: #EAF4FF; color: #4A90E2; font-weight: 600; }
+    .p-nav-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #B0B8AE; padding: 8px 12px 4px; }
+
+    /* ─── Buttons ─────────────────────────────────────────────── */
+    .p-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 18px; border-radius: 11px;
+      font-size: 13.5px; font-weight: 600;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer; border: none;
+      transition: all 0.14s; outline: none; white-space: nowrap;
+    }
+    .p-btn-primary { background: #4A90E2; color: white; }
+    .p-btn-primary:hover { background: #3A7FD0; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(74,144,226,0.30); }
+    .p-btn-secondary { background: white; color: #5F6468; border: 1.5px solid #E1E6DB; }
+    .p-btn-secondary:hover { background: #F7F8F4; color: #263238; border-color: #C5CEC0; }
+    .p-btn-ghost { background: transparent; color: #5F6468; padding: 7px 13px; border-radius: 9px; }
+    .p-btn-ghost:hover { background: #F1F3ED; color: #263238; }
+    .p-btn-green { background: #5FBF8F; color: white; }
+    .p-btn-green:hover { background: #4DAF7F; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(95,191,143,0.28); }
+    .p-btn-coral { background: #FFF1F1; color: #C04040; border: 1.5px solid #FDDADA; }
+    .p-btn-coral:hover { background: #FFE6E6; }
+    .p-btn-yellow { background: #FFF6DC; color: #8A6018; border: 1.5px solid #FDEEBA; }
+    .p-btn-yellow:hover { background: #FFEFCA; }
+    .p-btn-sm { padding: 6px 13px; font-size: 12.5px; border-radius: 9px; }
+    .p-btn-xs { padding: 4px 10px; font-size: 12px; border-radius: 8px; }
+
+    /* ─── Cards ───────────────────────────────────────────────── */
+    .p-card { background: white; border: 1.5px solid #E1E6DB; border-radius: 18px; }
+    .p-card-soft { background: #F1F3ED; border-radius: 14px; }
+    .p-card-signal { background: #FFF1F1; border: 1.5px solid #FDDADA; border-radius: 16px; }
+    .p-card-hint { background: #FFF6DC; border: 1.5px solid #FDEEBA; border-radius: 14px; }
+    .p-card-progress { background: #EAF7EF; border: 1.5px solid #C0E8D0; border-radius: 14px; }
+    .p-card-blue { background: #EAF4FF; border: 1.5px solid #B8D8F4; border-radius: 14px; }
+
+    /* ─── Badges ──────────────────────────────────────────────── */
+    .p-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; }
+    .p-badge-blue   { background: #EAF4FF; color: #2770C2; }
+    .p-badge-green  { background: #EAF7EF; color: #2A7850; }
+    .p-badge-coral  { background: #FFF1F1; color: #BF3A3A; }
+    .p-badge-yellow { background: #FFF6DC; color: #886018; }
+    .p-badge-grey   { background: #F1F3ED; color: #5F6468; }
+
+    /* ─── Tabs ────────────────────────────────────────────────── */
+    .p-tab { padding: 7px 16px; border-radius: 9px; font-size: 13px; font-weight: 500; cursor: pointer; color: #5F6468; transition: all 0.12s; border: none; background: transparent; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .p-tab:hover { background: #F1F3ED; color: #263238; }
+    .p-tab.active { background: #EAF4FF; color: #4A90E2; font-weight: 600; }
+
+    /* ─── Inputs ──────────────────────────────────────────────── */
+    .p-input { width: 100%; padding: 11px 15px; border: 1.5px solid #E1E6DB; border-radius: 12px; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; color: #263238; background: #FAFBF8; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+    .p-input:focus { border-color: #4A90E2; background: white; box-shadow: 0 0 0 3px rgba(74,144,226,0.10); }
+    textarea.p-input { resize: vertical; min-height: 90px; line-height: 1.65; }
+
+    /* ─── Range slider ────────────────────────────────────────── */
+    .p-range { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #E1E6DB; outline: none; cursor: pointer; }
+    .p-range::-webkit-slider-thumb { -webkit-appearance: none; width: 17px; height: 17px; border-radius: 50%; background: #4A90E2; cursor: pointer; box-shadow: 0 1px 4px rgba(74,144,226,0.35); border: 2.5px solid white; }
+    .p-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #4A90E2; cursor: pointer; border: 2px solid white; }
+
+    /* ─── Chips ───────────────────────────────────────────────── */
+    .p-chip { display: inline-flex; align-items: center; padding: 5px 13px; border-radius: 20px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: 1.5px solid #E1E6DB; background: white; color: #5F6468; transition: all 0.12s; user-select: none; }
+    .p-chip:hover, .p-chip.sel { background: #EAF4FF; border-color: #A8C8EC; color: #3A7ACC; }
+
+    /* ─── Upload zone ─────────────────────────────────────────── */
+    .p-upload { border: 2px dashed #D4D9CF; border-radius: 18px; background: #FAFBF8; text-align: center; padding: 48px 32px; cursor: pointer; transition: all 0.15s; }
+    .p-upload:hover { border-color: #4A90E2; background: #F0F7FF; }
+
+    /* ─── Formula toolbar ─────────────────────────────────────── */
+    .p-toolbar-btn { padding: 5px 10px; border-radius: 7px; font-size: 13px; font-family: 'JetBrains Mono', monospace; border: 1.5px solid #E1E6DB; background: white; color: #263238; cursor: pointer; transition: all 0.12s; }
+    .p-toolbar-btn:hover { background: #EAF4FF; border-color: #A8C8EC; color: #4A90E2; }
+
+    /* ─── Answer options ──────────────────────────────────────── */
+    .p-opt { padding: 12px 18px; border: 2px solid #E1E6DB; border-radius: 12px; cursor: pointer; font-size: 14.5px; font-family: 'JetBrains Mono', monospace; transition: all 0.14s; background: white; font-weight: 500; }
+    .p-opt:hover { border-color: #4A90E2; background: #EAF4FF; }
+    .p-opt.correct { border-color: #5FBF8F; background: #EAF7EF; color: #257550; }
+    .p-opt.wrong   { border-color: #F47C7C; background: #FFF1F1; color: #BF3A3A; }
+
+    /* ─── Panels ──────────────────────────────────────────────── */
+    .p-rpanel { width: 224px; flex-shrink: 0; border-left: 1.5px solid #E1E6DB; background: white; height: 100%; overflow-y: auto; padding: 22px 16px; display: flex; flex-direction: column; gap: 18px; }
+    .p-lpanel { width: 204px; flex-shrink: 0; border-right: 1.5px solid #E1E6DB; background: white; height: 100%; overflow-y: auto; padding: 22px 16px; display: flex; flex-direction: column; gap: 14px; }
+    .p-scroll  { flex: 1; overflow-y: auto; }
+
+    /* ─── Step cards ──────────────────────────────────────────── */
+    .p-step { background: white; border: 1.5px solid #E1E6DB; border-radius: 16px; overflow: hidden; }
+    .p-step-hd { padding: 12px 18px; border-bottom: 1px solid #F1F3ED; display: flex; align-items: center; gap: 10px; }
+    .p-step-bd { padding: 14px 18px; }
+    .p-step-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+
+    /* ─── Roadmap ─────────────────────────────────────────────── */
+    .p-road-item { display: flex; gap: 14px; }
+    .p-road-spine { display: flex; flex-direction: column; align-items: center; }
+    .p-road-dot { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .p-road-line { width: 2px; flex: 1; min-height: 16px; margin: 4px 0; }
+
+    /* ─── Divider ─────────────────────────────────────────────── */
+    .p-divider { height: 1px; background: #E1E6DB; margin: 6px 2px; }
+    .p-section-lbl { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8A9188; }
+
+    /* ─── Formula ─────────────────────────────────────────────── */
+    .p-mono { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.01em; }
+
+    /* ─── Progress bar ────────────────────────────────────────── */
+    .p-pbar-track { height: 5px; border-radius: 3px; background: #E1E6DB; overflow: hidden; }
+    .p-pbar-fill  { height: 100%; border-radius: 3px; background: #5FBF8F; transition: width 0.5s ease; }
+
+    /* ─── Value tag ───────────────────────────────────────────── */
+    .p-vtag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; background: #F1F3ED; border-radius: 7px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #263238; white-space: nowrap; }
+
+    /* ─── Pico eye blink ──────────────────────────────────────── */
+    @keyframes picoBlink {
+      0%, 90%, 100% { transform: scaleY(1); }
+      94%, 97%      { transform: scaleY(0.06); }
+    }
+    .pico-eye { animation: picoBlink 6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+
+    /* ─── Scan highlight ──────────────────────────────────────── */
+    .p-scan-hl { position: absolute; border: 2px solid #4A90E2; border-radius: 4px; background: rgba(74,144,226,0.08); cursor: pointer; transition: background 0.15s; }
+    .p-scan-hl:hover { background: rgba(74,144,226,0.18); }
+
+    /* ─── Animations ──────────────────────────────────────────── */
+    .p-fade { animation: pfade 0.2s ease-out; }
+    @keyframes pfade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+  </style>
+  <template id="__bundler_thumbnail" data-bg-color="#F7F8F4">
+    <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+      <!-- Sidebar -->
+      <rect x="0" y="0" width="220" height="800" fill="#FFFFFF" rx="0"/>
+      <rect x="0" y="0" width="220" height="800" fill="#FFFFFF"/>
+      <rect x="220" y="0" width="1.5" height="800" fill="#E1E6DB"/>
+      <!-- Logo area -->
+      <!-- Pico parrot simplified -->
+      <g transform="translate(26, 22)">
+        <ellipse cx="22" cy="34" rx="11" ry="12" fill="#7C8C7A"/>
+        <circle cx="22" cy="18" r="10" fill="#8A9A88"/>
+        <ellipse cx="22" cy="20" rx="7" ry="6" fill="#C0CCBD"/>
+        <circle cx="26" cy="15" r="4.5" fill="#DCE6D9"/>
+        <circle cx="26" cy="15" r="2.8" fill="#181C16"/>
+        <circle cx="27.2" cy="13.8" r="1.2" fill="white"/>
+        <path d="M20 22 Q22 20 24 22 Q23.5 26 22 27 Q20.5 26 20 22Z" fill="#38362C"/>
+        <path d="M18 43 C17 49 19 54 22 52 C25 54 27 49 26 43 Q24 47 22 46 Q20 47 18 43Z" fill="#D94F4F"/>
+      </g>
+      <!-- PicoLab text -->
+      <text x="68" y="44" font-family="system-ui, sans-serif" font-size="16" font-weight="800" fill="#263238">PicoLab</text>
+      <text x="68" y="58" font-family="system-ui, sans-serif" font-size="10" fill="#8A9188">Visual STEM coach</text>
+      <!-- Nav items -->
+      <rect x="12" y="76" width="196" height="28" rx="9" fill="#EAF4FF"/>
+      <rect x="22" y="88" width="8" height="8" rx="2" fill="#4A90E2"/>
+      <rect x="36" y="89" width="60" height="6" rx="3" fill="#4A90E2" opacity="0.6"/>
+      <rect x="12" y="114" width="196" height="24" rx="9" fill="transparent"/>
+      <rect x="22" y="124" width="8" height="6" rx="2" fill="#8A9188"/>
+      <rect x="36" y="125" width="80" height="4" rx="2" fill="#8A9188" opacity="0.4"/>
+      <rect x="22" y="148" width="8" height="6" rx="2" fill="#8A9188"/>
+      <rect x="36" y="149" width="70" height="4" rx="2" fill="#8A9188" opacity="0.4"/>
+      <rect x="22" y="172" width="8" height="6" rx="2" fill="#8A9188"/>
+      <rect x="36" y="173" width="55" height="4" rx="2" fill="#8A9188" opacity="0.4"/>
+      <!-- Main content area -->
+      <!-- Dot grid background on hero -->
+      <rect x="248" y="110" width="620" height="200" rx="18" fill="white" stroke="#E1E6DB" stroke-width="1.5"/>
+      <!-- Dot grid -->
+      <rect x="248" y="110" width="620" height="200" rx="18" fill="url(#dotgrid)" opacity="0.4"/>
+      <!-- Hero text lines -->
+      <rect x="272" y="148" width="60" height="14" rx="7" fill="#EAF4FF"/>
+      <rect x="272" y="174" width="320" height="20" rx="5" fill="#263238" opacity="0.85"/>
+      <rect x="272" y="202" width="260" height="20" rx="5" fill="#263238" opacity="0.85"/>
+      <rect x="272" y="234" width="400" height="10" rx="4" fill="#8A9188" opacity="0.5"/>
+      <rect x="272" y="250" width="360" height="10" rx="4" fill="#8A9188" opacity="0.5"/>
+      <rect x="272" y="282" width="130" height="32" rx="11" fill="#4A90E2"/>
+      <rect x="414" y="282" width="140" height="32" rx="11" fill="white" stroke="#E1E6DB" stroke-width="1.5"/>
+      <!-- Summary cards -->
+      <rect x="248" y="334" width="196" height="80" rx="16" fill="#FFF6DC" stroke="#FDEEBA" stroke-width="1.5"/>
+      <rect x="458" y="334" width="196" height="80" rx="16" fill="#FFF1F1" stroke="#FDDADA" stroke-width="1.5"/>
+      <rect x="668" y="334" width="196" height="80" rx="16" fill="#EAF4FF" stroke="#B8D8F4" stroke-width="1.5"/>
+      <!-- Right coach panel -->
+      <rect x="898" y="0" width="302" height="800" fill="white"/>
+      <rect x="898" y="0" width="1.5" height="800" fill="#E1E6DB"/>
+      <!-- Pico in coach panel -->
+      <g transform="translate(956, 32) scale(0.9)">
+        <ellipse cx="22" cy="34" rx="11" ry="12" fill="#7C8C7A"/>
+        <circle cx="22" cy="18" r="10" fill="#8A9A88"/>
+        <ellipse cx="22" cy="20" rx="7" ry="6" fill="#C0CCBD"/>
+        <circle cx="26" cy="15" r="4.5" fill="#DCE6D9"/>
+        <circle cx="26" cy="15" r="2.8" fill="#181C16"/>
+        <circle cx="27.2" cy="13.8" r="1.2" fill="white"/>
+        <path d="M20 22 Q22 20 24 22 Q23.5 26 22 27 Q20.5 26 20 22Z" fill="#38362C"/>
+        <path d="M18 43 C17 49 19 54 22 52 C25 54 27 49 26 43 Q24 47 22 46 Q20 47 18 43Z" fill="#D94F4F"/>
+      </g>
+      <rect x="920" y="108" width="240" height="8" rx="4" fill="#8A9188" opacity="0.3"/>
+      <rect x="920" y="126" width="200" height="8" rx="4" fill="#8A9188" opacity="0.2"/>
+      <rect x="920" y="152" width="240" height="60" rx="12" fill="#F1F3ED"/>
+    </svg>
+  </template>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="pico-ui.jsx"></script>
+  <script type="text/babel" src="pico-screens-1.jsx"></script>
+  <script type="text/babel" src="pico-screens-2.jsx"></script>
+  <script type="text/babel" src="pico-screens-3.jsx"></script>
+  <script type="text/babel" src="pico-screens-4.jsx"></script>
+  <script type="text/babel" src="pico-app.jsx"></script>
+</body>
+</html>

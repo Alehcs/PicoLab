@@ -1,0 +1,373 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--pico-bg);
+    color: var(--pico-text);
+    font-family: var(--pico-font-sans), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #d4d9cf;
+    border-radius: 3px;
+  }
+}
+
+@layer components {
+  .p-app {
+    display: flex;
+    min-height: 100vh;
+    overflow: hidden;
+    background: var(--pico-bg);
+  }
+
+  .p-content {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .p-scroll {
+    min-width: 0;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .p-sidebar {
+    width: 222px;
+    flex-shrink: 0;
+    border-right: 1.5px solid var(--pico-border);
+    background: var(--pico-surface);
+    height: 100vh;
+    overflow-y: auto;
+    padding: 18px 10px;
+  }
+
+  .p-nav {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    color: var(--pico-secondary);
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .p-nav:hover {
+    background: var(--pico-soft);
+    color: var(--pico-text);
+  }
+
+  .p-nav.active {
+    background: var(--pico-soft-blue);
+    color: var(--pico-blue);
+    font-weight: 600;
+  }
+
+  .p-divider {
+    height: 1px;
+    background: var(--pico-border);
+    margin: 6px 2px;
+  }
+
+  .p-section-lbl {
+    color: var(--pico-muted);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .p-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: none;
+    border-radius: 11px;
+    padding: 9px 18px;
+    color: inherit;
+    cursor: pointer;
+    font-family: var(--pico-font-sans), system-ui, sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.2;
+    outline: none;
+    transition: all 0.14s;
+    white-space: nowrap;
+  }
+
+  .p-btn:focus-visible,
+  .p-tab:focus-visible,
+  .p-chip:focus-visible {
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.18);
+  }
+
+  .p-btn-primary {
+    background: var(--pico-blue);
+    color: white;
+  }
+
+  .p-btn-primary:hover {
+    background: var(--pico-blue-hover);
+    box-shadow: 0 4px 14px rgba(74, 144, 226, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .p-btn-secondary {
+    border: 1.5px solid var(--pico-border);
+    background: white;
+    color: var(--pico-secondary);
+  }
+
+  .p-btn-secondary:hover {
+    border-color: #c5cec0;
+    background: var(--pico-bg);
+    color: var(--pico-text);
+  }
+
+  .p-btn-ghost {
+    background: transparent;
+    color: var(--pico-secondary);
+    padding: 7px 13px;
+    border-radius: 9px;
+  }
+
+  .p-btn-ghost:hover {
+    background: var(--pico-soft);
+    color: var(--pico-text);
+  }
+
+  .p-btn-green {
+    background: var(--pico-green);
+    color: white;
+  }
+
+  .p-btn-green:hover {
+    background: var(--pico-green-hover);
+    box-shadow: 0 4px 12px rgba(95, 191, 143, 0.28);
+    transform: translateY(-1px);
+  }
+
+  .p-btn-coral {
+    border: 1.5px solid var(--pico-coral-border);
+    background: var(--pico-soft-coral);
+    color: #c04040;
+  }
+
+  .p-btn-coral:hover {
+    background: #ffe6e6;
+  }
+
+  .p-btn-yellow {
+    border: 1.5px solid var(--pico-yellow-border);
+    background: var(--pico-soft-yellow);
+    color: #8a6018;
+  }
+
+  .p-btn-yellow:hover {
+    background: #ffefca;
+  }
+
+  .p-btn-sm {
+    border-radius: 9px;
+    padding: 6px 13px;
+    font-size: 12.5px;
+  }
+
+  .p-btn-xs {
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .p-card {
+    border: 1.5px solid var(--pico-border);
+    border-radius: 18px;
+    background: var(--pico-surface);
+  }
+
+  .p-card-soft {
+    border-radius: 14px;
+    background: var(--pico-soft);
+  }
+
+  .p-card-signal {
+    border: 1.5px solid var(--pico-coral-border);
+    border-radius: 16px;
+    background: var(--pico-soft-coral);
+  }
+
+  .p-card-hint {
+    border: 1.5px solid var(--pico-yellow-border);
+    border-radius: 14px;
+    background: var(--pico-soft-yellow);
+  }
+
+  .p-card-progress {
+    border: 1.5px solid var(--pico-green-border);
+    border-radius: 14px;
+    background: var(--pico-soft-green);
+  }
+
+  .p-card-blue {
+    border: 1.5px solid var(--pico-blue-border);
+    border-radius: 14px;
+    background: var(--pico-soft-blue);
+  }
+
+  .p-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.35;
+  }
+
+  .p-badge-blue {
+    background: var(--pico-soft-blue);
+    color: #2770c2;
+  }
+
+  .p-badge-green {
+    background: var(--pico-soft-green);
+    color: #2a7850;
+  }
+
+  .p-badge-coral {
+    background: var(--pico-soft-coral);
+    color: #bf3a3a;
+  }
+
+  .p-badge-yellow {
+    background: var(--pico-soft-yellow);
+    color: #886018;
+  }
+
+  .p-badge-grey {
+    background: var(--pico-soft);
+    color: var(--pico-secondary);
+  }
+
+  .p-tab {
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--pico-secondary);
+    cursor: pointer;
+    font-family: var(--pico-font-sans), system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    padding: 7px 16px;
+    transition: all 0.12s;
+  }
+
+  .p-tab:hover {
+    background: var(--pico-soft);
+    color: var(--pico-text);
+  }
+
+  .p-tab.active {
+    background: var(--pico-soft-blue);
+    color: var(--pico-blue);
+    font-weight: 600;
+  }
+
+  .p-pbar-track {
+    height: 5px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: var(--pico-border);
+  }
+
+  .p-pbar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--pico-green);
+    transition: width 0.5s ease;
+  }
+
+  .p-mono {
+    font-family: var(--pico-font-mono), ui-monospace, monospace;
+    letter-spacing: -0.01em;
+  }
+
+  .p-fade {
+    animation: pfade 0.2s ease-out;
+  }
+}
+
+@keyframes picoBlink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  94%,
+  97% {
+    transform: scaleY(0.06);
+  }
+}
+
+.pico-eye {
+  animation: picoBlink 6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes pfade {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

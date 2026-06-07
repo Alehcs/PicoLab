@@ -1,0 +1,26 @@
+:root {
+  --pico-bg: #f7f8f4;
+  --pico-surface: #ffffff;
+  --pico-soft: #f1f3ed;
+  --pico-border: #e1e6db;
+  --pico-text: #263238;
+  --pico-secondary: #5f6468;
+  --pico-muted: #8a9188;
+  --pico-blue: #4a90e2;
+  --pico-blue-hover: #3a7fd0;
+  --pico-green: #5fbf8f;
+  --pico-green-hover: #4daf7f;
+  --pico-coral: #f47c7c;
+  --pico-yellow: #f6c85f;
+  --pico-tail-red: #d94f4f;
+  --pico-soft-blue: #eaf4ff;
+  --pico-soft-green: #eaf7ef;
+  --pico-soft-yellow: #fff6dc;
+  --pico-soft-coral: #fff1f1;
+  --pico-blue-border: #b8d8f4;
+  --pico-green-border: #c0e8d0;
+  --pico-yellow-border: #fdeeba;
+  --pico-coral-border: #fddada;
+  --pico-font-sans: "Plus Jakarta Sans";
+  --pico-font-mono: "JetBrains Mono";
+}
