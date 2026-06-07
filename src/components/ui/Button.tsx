@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { Children, type ButtonHTMLAttributes, type ReactNode } from 'react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'green' | 'coral' | 'yellow';
 type ButtonSize = 'sm' | 'xs';
@@ -31,7 +31,7 @@ export function Button({
 
   return (
     <button type={type} className={classes} {...props}>
-      {children}
+      {Children.toArray(children)}
     </button>
   );
 }

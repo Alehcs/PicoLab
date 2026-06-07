@@ -341,6 +341,28 @@
   .p-fade {
     animation: pfade 0.2s ease-out;
   }
+
+  .p-dot-grid {
+    background-image: radial-gradient(circle, #d8ddd4 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+
+  .p-speech-bubble {
+    position: relative;
+    border-radius: 12px;
+    background: var(--pico-soft);
+  }
+
+  .p-speech-bubble::before {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    background: var(--pico-soft);
+    content: "";
+    transform: translateX(-50%) rotate(45deg);
+  }
 }
 
 @keyframes picoBlink {
