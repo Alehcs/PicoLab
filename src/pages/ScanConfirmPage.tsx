@@ -1,11 +1,155 @@
-import { PlaceholderPage } from './PlaceholderPage';
+import { Check, Edit3, RefreshCw, RotateCw, Search, ZoomIn, ZoomOut } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { DetectedValueCard } from '../components/intake/DetectedValueCard';
+import { HighlightLegend } from '../components/intake/HighlightLegend';
+import { ScanPreview } from '../components/intake/ScanPreview';
+import { PageHeader } from '../components/layout/PageHeader';
+import { FormulaBlock } from '../components/math/FormulaBlock';
+import { PicoMascot } from '../components/pico/PicoMascot';
+import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { sampleProblem } from '../data/mockProblem';
 
 export function ScanConfirmPage() {
+  const navigate = useNavigate();
+  const [problemText, setProblemText] = useState(sampleProblem.text);
+  const [reviewState, setReviewState] = useState<'ready' | 'details' | 'rechecked'>('ready');
+
   return (
-    <PlaceholderPage
-      eyebrow="Step 1 of 2"
-      title="Scan & Confirm"
-      subtitle="Students confirm extracted details before solving so the notebook starts from trusted information."
-    />
+    <div className="p-fade">
+      <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <PageHeader
+          eyebrow="Review scan → Start solving"
+          title="Check the details"
+          subtitle="Pico highlighted the numbers, signs, formulas, and units it found. Review them before solving."
+        />
+
+        <div className="flex w-fit items-center gap-2 rounded-full border-[1.5px] border-pico-border bg-white px-3 py-2 text-[12px] font-semibold text-pico-secondary">
+          <span className="rounded-full bg-pico-softBlue px-2 py-1 text-pico-blue">Review scan</span>
+          <span className="text-pico-muted">→</span>
+          <span>Start solving</span>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+        <aside className="flex flex-col gap-4 rounded-[18px] border-[1.5px] border-pico-border bg-white p-5 lg:p-6">
+          <div>
+            <h2 className="text-[17px] font-extrabold tracking-[-0.02em] text-pico-text">
+              Original scan
+            </h2>
+            <p className="mt-1 text-[12.5px] leading-relaxed text-pico-secondary">
+              Zoom in to check exponents, negative signs, and units.
+            </p>
+          </div>
+
+          <ScanPreview />
+          <HighlightLegend />
+
+          <div className="flex flex-wrap gap-2">
+            <Button variant="ghost" size="sm">
+              <ZoomIn size={13} />
+              Zoom in
+            </Button>
+            <Button variant="ghost" size="sm">
+              <ZoomOut size={13} />
+              Zoom out
+            </Button>
+            <Button variant="ghost" size="sm">
+              <RotateCw size={13} />
+              Rotate
+            </Button>
+            <Button variant="ghost" size="sm">
+              <RefreshCw size={13} />
+              Replace image
+            </Button>
+          </div>
+        </aside>
+
+        <section className="flex min-w-0 flex-col gap-[18px]">
+          <Card className="px-[22px] py-[18px]">
+            <div className="p-section-lbl mb-2.5">Extracted problem</div>
+            <textarea
+              className="min-h-[96px] w-full rounded-xl border-[1.5px] border-pico-border bg-[#FAFBF8] px-4 py-3 text-sm leading-[1.7] text-pico-text outline-none transition focus:border-pico-blue focus:bg-white focus:shadow-[0_0_0_3px_rgba(74,144,226,0.10)]"
+              value={problemText}
+              onChange={(event) => setProblemText(event.target.value)}
+            />
+            <p className="mt-2 text-[12.5px] leading-relaxed text-pico-muted">
+              Edit anything that looks off. Pico will use this version for the notebook.
+            </p>
+          </Card>
+
+          <Card className="px-[22px] py-[18px]">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="p-section-lbl">Detected details</div>
+              <Badge variant="blue">Editable</Badge>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {sampleProblem.detectedValues.map((detail) => (
+                <DetectedValueCard
+                  key={detail.value}
+                  value={detail.value}
+                  description={detail.description}
+                />
+              ))}
+            </div>
+          </Card>
+
+          <Card variant="hint" className="px-4 py-3.5">
+            <div className="flex gap-3">
+              <Search size={16} className="mt-0.5 shrink-0 text-[#8A6018]" aria-hidden="true" />
+              <div>
+                <div className="text-[13px] font-bold text-[#7A5010]">Needs a quick check</div>
+                <p className="mt-1 text-[13px] leading-relaxed text-[#7A5010]">
+                  I’m not sure if this says <FormulaBlock size="sm" className="font-bold text-[#7A5010]">5 s</FormulaBlock>{' '}
+                  or <FormulaBlock size="sm" className="font-bold text-[#7A5010]">55 s</FormulaBlock>. Please confirm before solving.
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="border-[#B8D8F4] bg-pico-softBlue px-4 py-3.5">
+            <div className="flex items-start gap-3">
+              <PicoMascot size={34} />
+              <p className="text-[13.5px] leading-[1.65] text-[#2A60A8]">
+                I found a motion problem. The units suggest we are solving for final velocity, so
+                the answer should likely be in{' '}
+                <FormulaBlock size="sm" className="font-bold text-[#2A60A8]">
+                  m/s
+                </FormulaBlock>
+                .
+              </p>
+            </div>
+          </Card>
+
+          {reviewState !== 'ready' ? (
+            <div className="p-fade rounded-[10px] bg-pico-softGreen px-4 py-2.5 text-[12.5px] font-medium text-[#2A7850]">
+              {reviewState === 'details'
+                ? 'Details are ready for editing.'
+                : 'Pico re-checked the visible details in this mock scan.'}
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap gap-2.5">
+            <Button variant="secondary" onClick={() => setReviewState('ready')}>
+              <Check size={15} />
+              Looks good
+            </Button>
+            <Button variant="secondary" onClick={() => setReviewState('details')}>
+              <Edit3 size={14} />
+              Edit details
+            </Button>
+            <Button variant="secondary" onClick={() => setReviewState('rechecked')}>
+              <RefreshCw size={14} />
+              Re-check details
+            </Button>
+            <Button onClick={() => navigate('/smart-notebook')}>
+              Start solving in Smart Notebook
+            </Button>
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }
