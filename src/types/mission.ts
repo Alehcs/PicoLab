@@ -1,15 +1,31 @@
-export type MissionQuestion = {
-  id: string;
-  prompt: string;
-  options: string[];
-  correctOptionIndex: number;
-  feedbackCorrect: string;
-  feedbackWrong: string;
+export type MissionDifficulty = 'Easy' | 'Medium' | 'Hard';
+
+export type MissionSubject = 'Math' | 'Physics';
+
+export type MissionReward = {
+  label: string;
+  points: number;
 };
 
-export type PracticeMission = {
+export type Mission = {
   id: string;
   title: string;
-  focusArea: string;
-  questions: MissionQuestion[];
+  subject: MissionSubject;
+  topic: string;
+  difficulty: MissionDifficulty;
+  reward: MissionReward;
+};
+
+export type AnswerOption = {
+  id: string;
+  label: string;
+};
+
+export type PracticeQuestion = {
+  id: string;
+  prompt: string;
+  options: AnswerOption[];
+  correctOptionId: string;
+  feedbackCorrect: string;
+  feedbackUsefulSignal: string;
 };
