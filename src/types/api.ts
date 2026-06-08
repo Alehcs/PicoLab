@@ -29,6 +29,12 @@ export type ProblemInput = {
   learnerGoal?: string;
 };
 
+export type ProblemScanInput = {
+  imageId?: string;
+  ocrText?: string;
+  subjectHint?: SubjectArea;
+};
+
 export type ExtractedDetailKind =
   | 'number'
   | 'unit'
@@ -126,7 +132,11 @@ export type StepCheckResponse = {
   stepStatus: 'complete' | 'needsAttention';
   supportiveFeedback: string;
   explanation: string;
+  whatWentWell?: string;
+  whatToAdjust?: string;
+  whyItMatters?: string;
   suggestedNextStep?: string;
+  suggestedNextAction?: string;
   learningSignal?: LearningSignal;
 };
 

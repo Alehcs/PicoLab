@@ -34,6 +34,7 @@ import type {
   PracticeMission,
   ProblemEntity,
   ProblemInput,
+  ProblemScanInput,
   SettingsResponse,
   StepCheckRequest,
   StepCheckResponse,
@@ -147,7 +148,9 @@ const missionFromFocus = (): PracticeMission => ({
 export const mockPicolabApi = {
   parseProblem: (_input: ProblemInput) => withMockResult(parsedProblem),
 
-  confirmProblem: (_draftProblemId: string) => withMockResult(confirmedProblem),
+  scanProblem: (_input: ProblemScanInput) => withMockResult(parsedProblem),
+
+  confirmProblem: (_problemId: string, _confirmedData?: unknown) => withMockResult(confirmedProblem),
 
   getNotebook: (_problemId: string): Promise<ApiResult<NotebookResponse>> =>
     withMockResult({

@@ -10,6 +10,8 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Tabs, type TabItem } from '../components/ui/Tabs';
 import { sampleProblem, topicChips } from '../data/mockProblem';
+import { picolabApi } from '../services/picolabApi';
+import { writeCurrentParsedProblem } from '../services/problemSession';
 
 type AddProblemTab = 'scan' | 'type' | 'formula';
 
@@ -26,6 +28,7 @@ export function AddProblemPage() {
   const [problemText, setProblemText] = useState('');
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [formulaText, setFormulaText] = useState('v = v₀ + at');
+  const [pendingAction, setPendingAction] = useState<'reading' | 'scanning' | null>(null);
 
   const toggleChip = (chip: string) => {
     setSelectedChips((current) =>
@@ -34,6 +37,81 @@ export function AddProblemPage() {
   };
 
   const goToScanConfirm = () => navigate('/scan-confirm');
+
+  const analyzeProblem = async () => {
+    if (pendingAction) return;
+
+    setPendingAction('reading');
+
+    try {
+      const text = problemText.trim() || sampleProblem.text;
+      const result = await picolabApi.parseProblem({
+        mode: 'typed',
+        text,
+        subjectHint: selectedChips.some((chip) => chip === 'Algebra steps' || chip === 'Linear functions')
+          ? 'math'
+          : 'physics',
+      });
+
+      if (result.ok) {
+        writeCurrentParsedProblem(result.data);
+      }
+
+      goToScanConfirm();
+    } catch {
+      goToScanConfirm();
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const analyzeFormula = async () => {
+    if (pendingAction) return;
+
+    setPendingAction('reading');
+
+    try {
+      const result = await picolabApi.parseProblem({
+        mode: 'formula',
+        formula: formulaText,
+        text: sampleProblem.text,
+        subjectHint: 'physics',
+      });
+
+      if (result.ok) {
+        writeCurrentParsedProblem(result.data);
+      }
+
+      goToScanConfirm();
+    } catch {
+      goToScanConfirm();
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const scanSampleProblem = async () => {
+    if (pendingAction) return;
+
+    setPendingAction('scanning');
+
+    try {
+      const result = await picolabApi.scanProblem({
+        imageId: 'sample-scan',
+        subjectHint: 'physics',
+      });
+
+      if (result.ok) {
+        writeCurrentParsedProblem(result.data);
+      }
+
+      goToScanConfirm();
+    } catch {
+      goToScanConfirm();
+    } finally {
+      setPendingAction(null);
+    }
+  };
 
   return (
     <div className="p-fade max-w-[860px]">
@@ -52,8 +130,15 @@ export function AddProblemPage() {
           <UploadDropzone
             uploaded={uploaded}
             onUpload={() => setUploaded(true)}
-            onSampleScan={goToScanConfirm}
+            onSampleScan={scanSampleProblem}
+            disabled={Boolean(pendingAction)}
           />
+
+          {pendingAction === 'scanning' ? (
+            <div className="p-fade mt-3.5 rounded-[10px] bg-pico-softBlue px-4 py-2.5 text-[12.5px] font-medium text-[#2A60A8]">
+              Pico is scanning the problem...
+            </div>
+          ) : null}
 
           <div className="mt-3.5 flex items-center gap-2 rounded-[10px] bg-pico-softGreen px-4 py-2.5 text-[12.5px] text-[#2A7850]">
             <Check size={14} aria-hidden="true" />
@@ -99,7 +184,13 @@ export function AddProblemPage() {
             </div>
           </div>
 
-          <Button className="w-fit" onClick={goToScanConfirm}>
+          {pendingAction === 'reading' ? (
+            <div className="p-fade rounded-[10px] bg-pico-softBlue px-4 py-2.5 text-[12.5px] font-medium text-[#2A60A8]">
+              Pico is reading the problem...
+            </div>
+          ) : null}
+
+          <Button className="w-fit" onClick={analyzeProblem} disabled={Boolean(pendingAction)}>
             <Sparkles size={15} />
             Analyze problem
           </Button>
@@ -128,7 +219,13 @@ export function AddProblemPage() {
 
           <PicoNote>Use the formula editor when signs, powers, roots, or units matter.</PicoNote>
 
-          <Button className="w-fit" onClick={goToScanConfirm}>
+          {pendingAction === 'reading' ? (
+            <div className="p-fade rounded-[10px] bg-pico-softBlue px-4 py-2.5 text-[12.5px] font-medium text-[#2A60A8]">
+              Pico is reading the problem...
+            </div>
+          ) : null}
+
+          <Button className="w-fit" onClick={analyzeFormula} disabled={Boolean(pendingAction)}>
             <Sparkles size={15} />
             Use this formula
           </Button>

@@ -8,6 +8,8 @@ import { LearningSignalCard } from './LearningSignalCard';
 type NotebookStepCardProps = {
   step: NotebookStep;
   onOpenVisual: () => void;
+  onCheckStep?: () => void;
+  checkPending?: boolean;
 };
 
 const stepCircleClass = {
@@ -16,7 +18,12 @@ const stepCircleClass = {
   upcoming: 'bg-pico-soft text-pico-muted',
 };
 
-export function NotebookStepCard({ step, onOpenVisual }: NotebookStepCardProps) {
+export function NotebookStepCard({
+  step,
+  onOpenVisual,
+  onCheckStep,
+  checkPending = false,
+}: NotebookStepCardProps) {
   const isUpcoming = step.status === 'upcoming';
   const borderClass = step.status === 'learning-signal' ? 'border-[#FDDADA]' : '';
 
@@ -73,7 +80,12 @@ export function NotebookStepCard({ step, onOpenVisual }: NotebookStepCardProps) 
           ) : null}
 
           {step.learningSignal ? (
-            <LearningSignalCard signal={step.learningSignal} onOpenVisual={onOpenVisual} />
+            <LearningSignalCard
+              signal={step.learningSignal}
+              onOpenVisual={onOpenVisual}
+              onCheckStep={onCheckStep}
+              checkPending={checkPending}
+            />
           ) : null}
         </div>
       )}

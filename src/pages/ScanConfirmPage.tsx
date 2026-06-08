@@ -1,5 +1,5 @@
 import { Check, Edit3, RefreshCw, RotateCw, Search, ZoomIn, ZoomOut } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DetectedValueCard } from '../components/intake/DetectedValueCard';
 import { HighlightLegend } from '../components/intake/HighlightLegend';
@@ -11,11 +11,79 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { sampleProblem } from '../data/mockProblem';
+import { picolabApi } from '../services/picolabApi';
+import {
+  readCurrentParsedProblem,
+  writeCurrentParsedProblem,
+  writeCurrentProblem,
+} from '../services/problemSession';
+import type { ParsedProblem } from '../types/api';
 
 export function ScanConfirmPage() {
   const navigate = useNavigate();
   const [problemText, setProblemText] = useState(sampleProblem.text);
+  const [parsedProblem, setParsedProblem] = useState<ParsedProblem | null>(null);
   const [reviewState, setReviewState] = useState<'ready' | 'details' | 'rechecked'>('ready');
+  const [confirming, setConfirming] = useState(false);
+
+  useEffect(() => {
+    const storedProblem = readCurrentParsedProblem();
+
+    if (storedProblem) {
+      setParsedProblem(storedProblem);
+      setProblemText(storedProblem.statement);
+    }
+  }, []);
+
+  const detectedDetails = useMemo(() => {
+    if (!parsedProblem?.extractedDetails.length) {
+      return sampleProblem.detectedValues;
+    }
+
+    return parsedProblem.extractedDetails.map((detail) => ({
+      value: detail.unit ? `${detail.value} ${detail.unit}` : detail.value,
+      description: detail.label,
+    }));
+  }, [parsedProblem]);
+
+  const primaryAmbiguity = parsedProblem?.ambiguities[0];
+
+  const startNotebook = async () => {
+    if (confirming) return;
+
+    setConfirming(true);
+
+    try {
+      const problemForConfirm: ParsedProblem =
+        parsedProblem ?? {
+          draftProblemId: 'draft-final-velocity',
+          statement: sampleProblem.text,
+          subject: 'physics',
+          topic: 'Kinematics',
+          extractedDetails: [],
+          ambiguities: [],
+          suggestedFormula: 'v = v₀ + at',
+          reviewNote: 'Review the extracted details before starting the Smart Notebook.',
+        };
+      const reviewedProblem = {
+        ...problemForConfirm,
+        statement: problemText,
+      };
+      writeCurrentParsedProblem(reviewedProblem);
+
+      const result = await picolabApi.confirmProblem(reviewedProblem.draftProblemId, reviewedProblem);
+
+      if (result.ok) {
+        writeCurrentProblem(result.data);
+      }
+
+      navigate('/smart-notebook');
+    } catch {
+      navigate('/smart-notebook');
+    } finally {
+      setConfirming(false);
+    }
+  };
 
   return (
     <div className="p-fade">
@@ -86,7 +154,7 @@ export function ScanConfirmPage() {
               <Badge variant="blue">Editable</Badge>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              {sampleProblem.detectedValues.map((detail) => (
+              {detectedDetails.map((detail) => (
                 <DetectedValueCard
                   key={detail.value}
                   value={detail.value}
@@ -102,8 +170,22 @@ export function ScanConfirmPage() {
               <div>
                 <div className="text-[13px] font-bold text-[#7A5010]">Needs a quick check</div>
                 <p className="mt-1 text-[13px] leading-relaxed text-[#7A5010]">
-                  I’m not sure if this says <FormulaBlock size="sm" className="font-bold text-[#7A5010]">5 s</FormulaBlock>{' '}
-                  or <FormulaBlock size="sm" className="font-bold text-[#7A5010]">55 s</FormulaBlock>. Please confirm before solving.
+                  {primaryAmbiguity ? (
+                    primaryAmbiguity.question
+                  ) : (
+                    <>
+                      I’m not sure if this says{' '}
+                      <FormulaBlock size="sm" className="font-bold text-[#7A5010]">
+                        5 s
+                      </FormulaBlock>{' '}
+                      or{' '}
+                      <FormulaBlock size="sm" className="font-bold text-[#7A5010]">
+                        55 s
+                      </FormulaBlock>
+                      .
+                    </>
+                  )}{' '}
+                  Please confirm before solving.
                 </p>
               </div>
             </div>
@@ -131,20 +213,26 @@ export function ScanConfirmPage() {
             </div>
           ) : null}
 
+          {confirming ? (
+            <div className="p-fade rounded-[10px] bg-pico-softBlue px-4 py-2.5 text-[12.5px] font-medium text-[#2A60A8]">
+              Pico is setting up your notebook...
+            </div>
+          ) : null}
+
           <div className="flex flex-wrap gap-2.5">
-            <Button variant="secondary" onClick={() => setReviewState('ready')}>
+            <Button variant="secondary" onClick={() => setReviewState('ready')} disabled={confirming}>
               <Check size={15} />
               Looks good
             </Button>
-            <Button variant="secondary" onClick={() => setReviewState('details')}>
+            <Button variant="secondary" onClick={() => setReviewState('details')} disabled={confirming}>
               <Edit3 size={14} />
               Edit details
             </Button>
-            <Button variant="secondary" onClick={() => setReviewState('rechecked')}>
+            <Button variant="secondary" onClick={() => setReviewState('rechecked')} disabled={confirming}>
               <RefreshCw size={14} />
               Re-check details
             </Button>
-            <Button onClick={() => navigate('/smart-notebook')}>
+            <Button onClick={startNotebook} disabled={confirming}>
               Start solving in Smart Notebook
             </Button>
           </div>

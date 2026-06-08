@@ -5,9 +5,15 @@ type UploadDropzoneProps = {
   uploaded: boolean;
   onUpload: () => void;
   onSampleScan: () => void;
+  disabled?: boolean;
 };
 
-export function UploadDropzone({ uploaded, onUpload, onSampleScan }: UploadDropzoneProps) {
+export function UploadDropzone({
+  uploaded,
+  onUpload,
+  onSampleScan,
+  disabled = false,
+}: UploadDropzoneProps) {
   return (
     <div className="rounded-[18px] border-2 border-dashed border-[#D4D9CF] bg-[#FAFBF8] px-7 py-9 text-center transition hover:border-pico-blue hover:bg-[#F0F7FF]">
       <UploadCloud size={38} className="mx-auto text-[#B0B8AE]" aria-hidden="true" />
@@ -20,8 +26,10 @@ export function UploadDropzone({ uploaded, onUpload, onSampleScan }: UploadDropz
       </p>
 
       <div className="mt-5 flex flex-wrap justify-center gap-2.5">
-        <Button onClick={onUpload}>Upload image</Button>
-        <Button variant="secondary" onClick={onSampleScan}>
+        <Button onClick={onUpload} disabled={disabled}>
+          Upload image
+        </Button>
+        <Button variant="secondary" onClick={onSampleScan} disabled={disabled}>
           Try sample scan
         </Button>
       </div>

@@ -8,9 +8,16 @@ import { Card } from '../ui/Card';
 type LearningSignalCardProps = {
   signal: LearningSignal;
   onOpenVisual: () => void;
+  onCheckStep?: () => void;
+  checkPending?: boolean;
 };
 
-export function LearningSignalCard({ signal, onOpenVisual }: LearningSignalCardProps) {
+export function LearningSignalCard({
+  signal,
+  onOpenVisual,
+  onCheckStep,
+  checkPending = false,
+}: LearningSignalCardProps) {
   return (
     <Card variant="signal" className="p-fade flex flex-col gap-3.5 px-4 py-4">
       <div className="flex items-start gap-3">
@@ -46,7 +53,9 @@ export function LearningSignalCard({ signal, onOpenVisual }: LearningSignalCardP
       </div>
 
       <div className="flex flex-wrap items-center gap-2 pt-0.5">
-        <Button variant="coral" size="sm">Adjust this step</Button>
+        <Button variant="coral" size="sm" onClick={onCheckStep} disabled={checkPending}>
+          {checkPending ? 'Pico is checking...' : 'Adjust this step'}
+        </Button>
         <Button variant="secondary" size="sm" onClick={onOpenVisual}>
           <Sparkles size={13} />
           Open visual explanation
