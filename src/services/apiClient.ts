@@ -1,6 +1,8 @@
 import type { ApiError, ApiResult } from '../types/api';
 
-export const API_BASE_URL = '/api';
+const rawBaseUrl = import.meta.env.VITE_PICOLAB_API_URL ?? 'http://127.0.0.1:8787/api';
+
+export const API_BASE_URL = rawBaseUrl.replace(/\/$/, '');
 
 type RequestOptions = {
   body?: unknown;
