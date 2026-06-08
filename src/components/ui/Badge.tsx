@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 
-type BadgeVariant = 'blue' | 'green' | 'coral' | 'yellow' | 'grey';
+export type BadgeVariant = 'blue' | 'green' | 'coral' | 'yellow' | 'grey';
 
 type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
   children: ReactNode;
