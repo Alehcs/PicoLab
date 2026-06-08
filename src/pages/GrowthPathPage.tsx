@@ -1,9 +1,12 @@
 import { FlaskConical, Map, Target } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CurrentGoalCard } from '../components/growth/CurrentGoalCard';
 import { GrowthPathStep } from '../components/growth/GrowthPathStep';
 import { RoadmapProgressCard } from '../components/growth/RoadmapProgressCard';
 import { PageHeader } from '../components/layout/PageHeader';
+import { AskPicoButton } from '../components/pico/AskPicoButton';
+import { AskPicoDrawer } from '../components/pico/AskPicoDrawer';
 import { PicoMascot } from '../components/pico/PicoMascot';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -18,6 +21,7 @@ import {
 
 export function GrowthPathPage() {
   const navigate = useNavigate();
+  const [askPicoOpen, setAskPicoOpen] = useState(false);
 
   const goToRoute = (route?: string) => {
     if (route) navigate(route);
@@ -119,10 +123,19 @@ export function GrowthPathPage() {
               <div className="p-speech-bubble mt-2 px-3.5 py-3 text-[13px] leading-relaxed text-pico-secondary">
                 {growthPathPicoPlan}
               </div>
+              <div className="mt-3">
+                <AskPicoButton fullWidth onClick={() => setAskPicoOpen(true)} />
+              </div>
             </div>
           </Card>
         </aside>
       </div>
+
+      <AskPicoDrawer
+        open={askPicoOpen}
+        context="growth-path"
+        onClose={() => setAskPicoOpen(false)}
+      />
     </div>
   );
 }

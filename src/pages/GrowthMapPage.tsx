@@ -1,10 +1,13 @@
+import { MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GrowthSummaryCard } from '../components/growth/GrowthSummaryCard';
 import { LearningSignalRow } from '../components/growth/LearningSignalRow';
 import { SuggestedDirectionCard } from '../components/growth/SuggestedDirectionCard';
 import { PageHeader } from '../components/layout/PageHeader';
+import { AskPicoDrawer } from '../components/pico/AskPicoDrawer';
 import { PicoMascot } from '../components/pico/PicoMascot';
+import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Tabs, type TabItem } from '../components/ui/Tabs';
 import {
@@ -24,6 +27,7 @@ const filterTabs: Array<TabItem<GrowthFilter>> = growthFilters.map((filter) => (
 export function GrowthMapPage() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<GrowthFilter>('week');
+  const [askPicoOpen, setAskPicoOpen] = useState(false);
 
   const goToRoute = (route?: string) => {
     if (route) navigate(route);
@@ -36,12 +40,18 @@ export function GrowthMapPage() {
         title="Growth Map"
         subtitle="Pico turns repeated mistakes into learning signals you can improve."
         actions={
-          <Tabs
-            items={filterTabs}
-            value={filter}
-            onChange={setFilter}
-            ariaLabel="Growth Map time range"
-          />
+          <>
+            <Tabs
+              items={filterTabs}
+              value={filter}
+              onChange={setFilter}
+              ariaLabel="Growth Map time range"
+            />
+            <Button variant="ghost" size="sm" onClick={() => setAskPicoOpen(true)}>
+              <MessageCircle size={13} />
+              Ask Pico
+            </Button>
+          </>
         }
       />
 
@@ -91,6 +101,12 @@ export function GrowthMapPage() {
           </div>
         </div>
       </Card>
+
+      <AskPicoDrawer
+        open={askPicoOpen}
+        context="growth-map"
+        onClose={() => setAskPicoOpen(false)}
+      />
     </div>
   );
 }

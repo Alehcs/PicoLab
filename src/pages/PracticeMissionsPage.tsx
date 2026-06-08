@@ -7,6 +7,7 @@ import { MissionCompleteCard } from '../components/practice/MissionCompleteCard'
 import { PracticeCoachPanel } from '../components/practice/PracticeCoachPanel';
 import { RandomMissionCard } from '../components/practice/RandomMissionCard';
 import { PageHeader } from '../components/layout/PageHeader';
+import { AskPicoDrawer } from '../components/pico/AskPicoDrawer';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -17,6 +18,7 @@ export function PracticeMissionsPage() {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [randomPreview, setRandomPreview] = useState(randomMissions[0].title);
+  const [askPicoOpen, setAskPicoOpen] = useState(false);
 
   const isComplete = useMemo(
     () => checked && selectedOptionId === focusMission.question.correctOptionId,
@@ -108,9 +110,15 @@ export function PracticeMissionsPage() {
         </main>
 
         <aside className="min-w-0">
-          <PracticeCoachPanel />
+          <PracticeCoachPanel onAskPico={() => setAskPicoOpen(true)} />
         </aside>
       </div>
+
+      <AskPicoDrawer
+        open={askPicoOpen}
+        context="practice"
+        onClose={() => setAskPicoOpen(false)}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Route, Signal, Sparkles, Target } from 'lucide-react';
+import { MessageCircle, Route, Signal, Sparkles, Target } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,6 +10,7 @@ import { ProfileSummaryCard } from '../components/profile/ProfileSummaryCard';
 import { QuoteCard } from '../components/profile/QuoteCard';
 import { SubjectFocusCard } from '../components/profile/SubjectFocusCard';
 import { PageHeader } from '../components/layout/PageHeader';
+import { AskPicoDrawer } from '../components/pico/AskPicoDrawer';
 import { PicoMascot } from '../components/pico/PicoMascot';
 import { PicoNote } from '../components/pico/PicoNote';
 import { Badge } from '../components/ui/Badge';
@@ -44,6 +45,7 @@ export function ProfilePage() {
   const [tab, setTab] = useState<ProfileTab>('subjects');
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [goalsTouched, setGoalsTouched] = useState(false);
+  const [askPicoOpen, setAskPicoOpen] = useState(false);
 
   const unlockedAchievements = mockAchievements.filter((achievement) => achievement.unlocked);
   const upcomingAchievements = mockAchievements.filter((achievement) => !achievement.unlocked);
@@ -206,10 +208,16 @@ export function ProfilePage() {
         title="Profile"
         subtitle="Your learning identity, goals, progress, and achievements with Pico."
         actions={
-          <Button onClick={() => navigate('/practice-missions')}>
-            <Target size={15} />
-            Start daily challenge
-          </Button>
+          <>
+            <Button onClick={() => navigate('/practice-missions')}>
+              <Target size={15} />
+              Start daily challenge
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setAskPicoOpen(true)}>
+              <MessageCircle size={13} />
+              Ask Pico
+            </Button>
+          </>
         }
       />
 
@@ -242,6 +250,12 @@ export function ProfilePage() {
           <Badge variant="green">{unlockedAchievements.length} badges unlocked</Badge>
         </div>
       </div>
+
+      <AskPicoDrawer
+        open={askPicoOpen}
+        context="profile"
+        onClose={() => setAskPicoOpen(false)}
+      />
     </div>
   );
 }

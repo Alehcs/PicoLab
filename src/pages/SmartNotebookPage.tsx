@@ -1,8 +1,10 @@
 import { FlaskConical, Map } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NotebookStepCard } from '../components/notebook/NotebookStepCard';
 import { PicoCoachPanel } from '../components/notebook/PicoCoachPanel';
 import { ProblemContextPanel } from '../components/notebook/ProblemContextPanel';
+import { AskPicoDrawer } from '../components/pico/AskPicoDrawer';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { ProgressBar } from '../components/ui/ProgressBar';
@@ -15,6 +17,7 @@ import {
 
 export function SmartNotebookPage() {
   const navigate = useNavigate();
+  const [askPicoOpen, setAskPicoOpen] = useState(false);
 
   const openVisualLab = () => navigate('/visual-lab');
   const viewGrowthMap = () => navigate('/growth-map');
@@ -82,9 +85,16 @@ export function SmartNotebookPage() {
             patternInsight={mockPatternInsight}
             onReviewPattern={viewGrowthMap}
             onViewGrowthPath={viewGrowthPath}
+            onAskPico={() => setAskPicoOpen(true)}
           />
         </aside>
       </div>
+
+      <AskPicoDrawer
+        open={askPicoOpen}
+        context="notebook"
+        onClose={() => setAskPicoOpen(false)}
+      />
     </div>
   );
 }

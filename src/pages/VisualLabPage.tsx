@@ -7,6 +7,7 @@ import { MotionSimulation } from '../components/visual-lab/MotionSimulation';
 import { VelocityTimeGraph } from '../components/visual-lab/VelocityTimeGraph';
 import { VisualLabCoachPanel } from '../components/visual-lab/VisualLabCoachPanel';
 import { VisualModeSelector } from '../components/visual-lab/VisualModeSelector';
+import { AskPicoDrawer } from '../components/pico/AskPicoDrawer';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { visualLabCopy, visualLabDefaults, visualModes } from '../data/mockVisualLab';
@@ -19,6 +20,7 @@ export function VisualLabPage() {
   const [currentTime, setCurrentTime] = useState(visualLabDefaults.time);
   const [playing, setPlaying] = useState(false);
   const [slowMotion, setSlowMotion] = useState(false);
+  const [askPicoOpen, setAskPicoOpen] = useState(false);
 
   const finalVelocity = useMemo(
     () => initialVelocity + acceleration * time,
@@ -158,9 +160,16 @@ export function VisualLabPage() {
             finalVelocity={finalVelocity}
             onPracticeUnits={() => navigate('/practice-missions')}
             onViewGrowthPath={() => navigate('/growth-path')}
+            onAskPico={() => setAskPicoOpen(true)}
           />
         </aside>
       </div>
+
+      <AskPicoDrawer
+        open={askPicoOpen}
+        context="visual-lab"
+        onClose={() => setAskPicoOpen(false)}
+      />
     </div>
   );
 }

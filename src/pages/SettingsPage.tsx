@@ -1,3 +1,4 @@
+import { MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 
 import { AccentSwatches } from '../components/settings/AccentSwatches';
@@ -5,6 +6,7 @@ import { SegmentedControl } from '../components/settings/SegmentedControl';
 import { SettingsGroup, SettingsRow } from '../components/settings/SettingsGroup';
 import { ToggleSwitch } from '../components/settings/ToggleSwitch';
 import { PageHeader } from '../components/layout/PageHeader';
+import { AskPicoDrawer } from '../components/pico/AskPicoDrawer';
 import { PicoNote } from '../components/pico/PicoNote';
 import { Button } from '../components/ui/Button';
 import { accentColors, initialSettingsState, settingGroups } from '../data/mockSettings';
@@ -13,6 +15,7 @@ import type { SettingOptionKey, SettingToggleKey, SettingsState } from '../types
 export function SettingsPage() {
   const [settings, setSettings] = useState<SettingsState>(initialSettingsState);
   const [lastMockAction, setLastMockAction] = useState<string | null>(null);
+  const [askPicoOpen, setAskPicoOpen] = useState(false);
 
   const setToggle = (key: SettingToggleKey, value: boolean) => {
     setSettings((current) => ({ ...current, [key]: value }));
@@ -27,6 +30,12 @@ export function SettingsPage() {
       <PageHeader
         title="Settings"
         subtitle="Personalize PicoLab, manage your data, and adjust how Pico supports you."
+        actions={
+          <Button variant="ghost" size="sm" onClick={() => setAskPicoOpen(true)}>
+            <MessageCircle size={13} />
+            Ask Pico
+          </Button>
+        }
       />
 
       <div className="flex max-w-[680px] flex-col gap-6">
@@ -109,6 +118,12 @@ export function SettingsPage() {
           </SettingsGroup>
         ))}
       </div>
+
+      <AskPicoDrawer
+        open={askPicoOpen}
+        context="settings"
+        onClose={() => setAskPicoOpen(false)}
+      />
     </div>
   );
 }
