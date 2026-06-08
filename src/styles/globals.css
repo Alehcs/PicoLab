@@ -49,6 +49,7 @@
 @layer components {
   .p-app {
     display: flex;
+    height: 100vh;
     min-height: 100vh;
     overflow: hidden;
     background: var(--pico-bg);
@@ -58,6 +59,7 @@
     display: flex;
     min-width: 0;
     flex: 1;
+    height: 100vh;
     min-height: 100vh;
     overflow: hidden;
   }
