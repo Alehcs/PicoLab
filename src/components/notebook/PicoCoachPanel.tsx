@@ -1,6 +1,7 @@
-import { Compass, MessageCircle } from 'lucide-react';
+import { Compass } from 'lucide-react';
 import type { PatternInsight } from '../../data/mockNotebook';
 import { PicoMascot } from '../pico/PicoMascot';
+import { AskPicoButton } from '../pico/AskPicoButton';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 
@@ -10,6 +11,7 @@ type PicoCoachPanelProps = {
   patternInsight: PatternInsight;
   onReviewPattern: () => void;
   onViewGrowthPath: () => void;
+  onAskPico: () => void;
 };
 
 export function PicoCoachPanel({
@@ -18,6 +20,7 @@ export function PicoCoachPanel({
   patternInsight,
   onReviewPattern,
   onViewGrowthPath,
+  onAskPico,
 }: PicoCoachPanelProps) {
   return (
     <Card className="flex flex-col gap-4 px-4 py-5">
@@ -57,10 +60,7 @@ export function PicoCoachPanel({
         <Button variant="ghost" size="sm" fullWidth onClick={onViewGrowthPath}>
           View Growth Path
         </Button>
-        <Button variant="ghost" size="sm" fullWidth>
-          <MessageCircle size={13} />
-          Ask Pico
-        </Button>
+        <AskPicoButton fullWidth onClick={onAskPico} />
       </div>
     </Card>
   );

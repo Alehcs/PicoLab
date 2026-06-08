@@ -1,10 +1,13 @@
-import { MessageCircle } from 'lucide-react';
 import { practiceCoach } from '../../data/mockMissions';
+import { AskPicoButton } from '../pico/AskPicoButton';
 import { PicoMascot } from '../pico/PicoMascot';
-import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 
-export function PracticeCoachPanel() {
+type PracticeCoachPanelProps = {
+  onAskPico: () => void;
+};
+
+export function PracticeCoachPanel({ onAskPico }: PracticeCoachPanelProps) {
   return (
     <Card className="flex flex-col gap-4 px-4 py-5">
       <div className="flex flex-col items-center gap-1.5 border-b border-pico-border pb-4">
@@ -34,10 +37,7 @@ export function PracticeCoachPanel() {
         ))}
       </div>
 
-      <Button variant="ghost" size="sm" fullWidth>
-        <MessageCircle size={13} />
-        Ask Pico
-      </Button>
+      <AskPicoButton fullWidth onClick={onAskPico} />
     </Card>
   );
 }

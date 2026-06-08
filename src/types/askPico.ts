@@ -14,6 +14,10 @@ export type AskPicoAction = {
 
 export type AskPicoContextData = {
   title: string;
+  contextLabel: string;
+  contextNote: string;
+  contextValue?: string;
+  storageKey: string;
   inputPlaceholder: string;
   suggestedQuestions: string[];
   mockResponse: string;
@@ -25,3 +29,5 @@ export type AskPicoMessage = {
   author: 'pico' | 'user';
   text: string;
 };
+
+export type AskPicoHistory = Record<string, AskPicoMessage[]>;

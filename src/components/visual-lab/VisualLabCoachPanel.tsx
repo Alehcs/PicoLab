@@ -1,5 +1,6 @@
-import { MessageCircle, Target } from 'lucide-react';
+import { Target } from 'lucide-react';
 import { FormulaBlock } from '../math/FormulaBlock';
+import { AskPicoButton } from '../pico/AskPicoButton';
 import { PicoMascot } from '../pico/PicoMascot';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -10,6 +11,7 @@ type VisualLabCoachPanelProps = {
   finalVelocity: number;
   onPracticeUnits: () => void;
   onViewGrowthPath: () => void;
+  onAskPico: () => void;
 };
 
 const fmt = (value: number) => Number(value.toFixed(1)).toString();
@@ -19,6 +21,7 @@ export function VisualLabCoachPanel({
   finalVelocity,
   onPracticeUnits,
   onViewGrowthPath,
+  onAskPico,
 }: VisualLabCoachPanelProps) {
   return (
     <Card className="flex flex-col gap-4 px-4 py-5">
@@ -62,10 +65,7 @@ export function VisualLabCoachPanel({
       <div className="h-px bg-pico-border" />
 
       <div className="flex flex-col gap-2">
-        <Button variant="ghost" size="sm" fullWidth>
-          <MessageCircle size={13} />
-          Ask Pico
-        </Button>
+        <AskPicoButton fullWidth onClick={onAskPico} />
         <Button variant="secondary" size="sm" fullWidth onClick={onPracticeUnits}>
           <Target size={13} />
           Practice units

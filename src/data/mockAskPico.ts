@@ -3,12 +3,16 @@ import type { AskPicoContext, AskPicoContextData } from '../types/askPico';
 export const askPicoContexts: Record<AskPicoContext, AskPicoContextData> = {
   notebook: {
     title: 'Ask Pico about this step',
-    inputPlaceholder: 'Ask Pico about this step...',
+    contextLabel: 'Smart Notebook · Step 2',
+    contextNote: 'Pico is looking at your current step:',
+    contextValue: 'v = 10 m',
+    storageKey: 'notebook',
+    inputPlaceholder: 'Ask about this step...',
     suggestedQuestions: [
       'Why is the unit m/s?',
+      'Explain simpler',
+      'Give me a hint',
       'Why do seconds cancel?',
-      'Can you explain this simpler?',
-      'Why is this formula used?',
     ],
     mockResponse:
       'The number 10 is correct. The unit changes because acceleration multiplied by time gives velocity: m/s² · s = m/s.',
@@ -19,12 +23,15 @@ export const askPicoContexts: Record<AskPicoContext, AskPicoContextData> = {
   },
   'visual-lab': {
     title: 'Ask Pico about this visual',
-    inputPlaceholder: 'Ask Pico about this visual...',
+    contextLabel: 'Visual Lab · Motion',
+    contextNote: 'Pico is looking at your motion graph and unit insight.',
+    storageKey: 'visualLab',
+    inputPlaceholder: 'Ask about this visual...',
     suggestedQuestions: [
       'What does the graph show?',
+      'Explain simpler',
+      'Show another example',
       'Why is this velocity, not distance?',
-      'How do the sliders affect the result?',
-      'Can you explain the unit insight?',
     ],
     mockResponse:
       'The graph shows velocity changing over time. The final point gives the final velocity, so the answer uses m/s.',
@@ -35,10 +42,13 @@ export const askPicoContexts: Record<AskPicoContext, AskPicoContextData> = {
   },
   'growth-map': {
     title: 'Ask Pico about your learning signals',
-    inputPlaceholder: 'Ask Pico about your signals...',
+    contextLabel: 'Growth Map',
+    contextNote: 'Pico is looking at your recent learning signals.',
+    storageKey: 'growthMap',
+    inputPlaceholder: 'Ask about your learning signals...',
     suggestedQuestions: [
       'What does unit mismatch mean?',
-      'Why does this pattern keep appearing?',
+      'Give me a hint',
       'What should I practice next?',
       'Am I improving?',
     ],
@@ -51,10 +61,13 @@ export const askPicoContexts: Record<AskPicoContext, AskPicoContextData> = {
   },
   'growth-path': {
     title: 'Ask Pico about your path',
-    inputPlaceholder: 'Ask Pico about your path...',
+    contextLabel: 'Growth Path',
+    contextNote: 'Pico is looking at your current learning path.',
+    storageKey: 'growthPath',
+    inputPlaceholder: 'Ask about your learning path...',
     suggestedQuestions: [
       'Why is units in motion first?',
-      'Can I change my goal?',
+      'Explain simpler',
       'What comes after this?',
       'How long should I practice?',
     ],
@@ -67,7 +80,10 @@ export const askPicoContexts: Record<AskPicoContext, AskPicoContextData> = {
   },
   practice: {
     title: 'Ask Pico about this mission',
-    inputPlaceholder: 'Ask Pico about this mission...',
+    contextLabel: 'Practice Missions',
+    contextNote: 'Pico is looking at your current mission.',
+    storageKey: 'practice',
+    inputPlaceholder: 'Ask about this mission...',
     suggestedQuestions: [
       'Why is this answer m/s?',
       'Can I get a hint?',
@@ -83,7 +99,10 @@ export const askPicoContexts: Record<AskPicoContext, AskPicoContextData> = {
   },
   profile: {
     title: 'Ask Pico about your progress',
-    inputPlaceholder: 'Ask Pico about your progress...',
+    contextLabel: 'Profile',
+    contextNote: 'Pico is looking at your progress, goals, and league.',
+    storageKey: 'profile',
+    inputPlaceholder: 'Ask about your progress...',
     suggestedQuestions: [
       'What does my league mean?',
       'What should I focus on today?',
@@ -99,7 +118,10 @@ export const askPicoContexts: Record<AskPicoContext, AskPicoContextData> = {
   },
   settings: {
     title: 'Ask Pico about settings',
-    inputPlaceholder: 'Ask Pico about settings...',
+    contextLabel: 'Settings',
+    contextNote: 'Pico is looking at your preferences.',
+    storageKey: 'settings',
+    inputPlaceholder: 'Ask about settings...',
     suggestedQuestions: [
       'Which explanation style should I use?',
       'What does learning history do?',
