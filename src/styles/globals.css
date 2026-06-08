@@ -146,6 +146,11 @@
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.18);
   }
 
+  .p-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
+  }
+
   .p-btn-primary {
     background: var(--pico-blue);
     color: white;

@@ -1,12 +1,13 @@
 import type { ApiError, ApiResult } from '../types/api';
 
-const rawBaseUrl = import.meta.env.VITE_PICOLAB_API_URL ?? 'http://127.0.0.1:8787/api';
+const rawBaseUrl = import.meta.env?.VITE_PICOLAB_API_URL ?? 'http://127.0.0.1:8787/api';
 
 export const API_BASE_URL = rawBaseUrl.replace(/\/$/, '');
 
 type RequestOptions = {
   body?: unknown;
   headers?: Record<string, string>;
+  timeoutMs?: number;
 };
 
 const createError = (code: string, message: string, details?: Record<string, unknown>): ApiError => ({
@@ -20,9 +21,16 @@ const request = async <T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<ApiResult<T>> => {
+  const controller = new AbortController();
+  const timeoutId =
+    options.timeoutMs && options.timeoutMs > 0
+      ? globalThis.setTimeout(() => controller.abort(), options.timeoutMs)
+      : undefined;
+
   try {
     const response = await fetch(`${API_BASE_URL}${path}`, {
       method,
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -56,11 +64,18 @@ const request = async <T>(
         cause: error instanceof Error ? error.message : String(error),
       }),
     };
+  } finally {
+    if (timeoutId) {
+      globalThis.clearTimeout(timeoutId);
+    }
   }
 };
 
 export const apiClient = {
-  get: <T>(path: string) => request<T>('GET', path),
-  post: <T>(path: string, body?: unknown) => request<T>('POST', path, { body }),
-  patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, { body }),
+  get: <T>(path: string, options?: Omit<RequestOptions, 'body'>) =>
+    request<T>('GET', path, options),
+  post: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'body'>) =>
+    request<T>('POST', path, { ...options, body }),
+  patch: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'body'>) =>
+    request<T>('PATCH', path, { ...options, body }),
 };

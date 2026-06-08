@@ -1,9 +1,14 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { MessageCircle, Send, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { askPicoContexts, askPicoFirstNote } from '../../data/mockAskPico';
+import { picolabApi } from '../../services/picolabApi';
 import type { AskPicoContext, AskPicoHistory, AskPicoMessage } from '../../types/askPico';
+import type {
+  AskPicoContext as ApiAskPicoContext,
+  AskPicoMessage as ApiAskPicoMessage,
+} from '../../types/api';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { PicoMascot } from './PicoMascot';
@@ -78,16 +83,65 @@ const clearMessages = (storageKey: string) => {
   }
 };
 
+const apiContextByDrawerContext: Record<AskPicoContext, ApiAskPicoContext> = {
+  notebook: 'notebook',
+  'visual-lab': 'visualLab',
+  'growth-map': 'growthMap',
+  'growth-path': 'growthPath',
+  practice: 'practice',
+  profile: 'profile',
+  settings: 'settings',
+};
+
+const toApiMessage = (message: AskPicoMessage): ApiAskPicoMessage => ({
+  id: message.id,
+  role: message.author === 'user' ? 'learner' : 'pico',
+  text: message.text,
+});
+
+const getCurrentPage = () => (typeof window === 'undefined' ? '' : window.location.pathname);
+
+const getCurrentState = (context: AskPicoContext) => {
+  if (context === 'notebook') {
+    return {
+      problemId: 'mock-problem-final-velocity',
+      stepId: 'step-2',
+      topic: 'Kinematics',
+    };
+  }
+
+  if (context === 'visual-lab') {
+    return {
+      problemId: 'mock-problem-final-velocity',
+      topic: 'Kinematics',
+      visualTemplate: 'motion',
+    };
+  }
+
+  if (context === 'practice') {
+    return {
+      missionId: 'focus-units-in-motion',
+      topic: 'Kinematics',
+    };
+  }
+
+  return undefined;
+};
+
 export function AskPicoDrawer({ open, context, onClose }: AskPicoDrawerProps) {
   const navigate = useNavigate();
   const contextData = askPicoContexts[context];
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<AskPicoMessage[]>(() => createInitialMessages(context));
+  const [pending, setPending] = useState(false);
+  const requestVersionRef = useRef(0);
 
   useEffect(() => {
     if (!open) return;
 
     setInput('');
+    setPending(false);
+    requestVersionRef.current += 1;
     setMessages(readMessages(contextData.storageKey) ?? createInitialMessages(context));
   }, [context, contextData.storageKey, open]);
 
@@ -114,27 +168,66 @@ export function AskPicoDrawer({ open, context, onClose }: AskPicoDrawerProps) {
     writeMessages(contextData.storageKey, nextMessages);
   };
 
-  const sendMessage = (text: string) => {
+  const sendMessage = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed || pending) return;
 
     const timestamp = Date.now();
-    const nextMessages: AskPicoMessage[] = [
+    const requestVersion = requestVersionRef.current + 1;
+    requestVersionRef.current = requestVersion;
+    const userMessage: AskPicoMessage = {
+      id: `user-${timestamp}`,
+      author: 'user',
+      text: trimmed,
+    };
+    const messagesWithUser = [
       ...messages,
-      {
-        id: `user-${timestamp}`,
-        author: 'user',
-        text: trimmed,
-      },
-      {
-        id: `pico-${timestamp}`,
-        author: 'pico',
-        text: contextData.mockResponse,
-      },
+      userMessage,
     ];
 
-    updateMessages(nextMessages);
+    updateMessages(messagesWithUser);
     setInput('');
+    setPending(true);
+
+    try {
+      const result = await picolabApi.askPico({
+        context: apiContextByDrawerContext[context],
+        question: trimmed,
+        currentPage: getCurrentPage(),
+        currentState: getCurrentState(context),
+        messages: messagesWithUser.map(toApiMessage),
+        history: messages.map(toApiMessage),
+      });
+      const picoText = result.ok ? result.data.message.text : contextData.mockResponse;
+      const picoMessage: AskPicoMessage = {
+        id: `pico-${result.source}-${timestamp}`,
+        author: 'pico',
+        text: picoText,
+      };
+
+      if (requestVersionRef.current === requestVersion) {
+        updateMessages([...messagesWithUser, picoMessage]);
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn('Ask Pico failed unexpectedly; using local fallback.', error);
+      }
+
+      if (requestVersionRef.current === requestVersion) {
+        updateMessages([
+          ...messagesWithUser,
+          {
+            id: `pico-localFallback-${timestamp}`,
+            author: 'pico',
+            text: contextData.mockResponse,
+          },
+        ]);
+      }
+    } finally {
+      if (requestVersionRef.current === requestVersion) {
+        setPending(false);
+      }
+    }
   };
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -147,6 +240,8 @@ export function AskPicoDrawer({ open, context, onClose }: AskPicoDrawerProps) {
     clearMessages(contextData.storageKey);
     setMessages(initialMessages);
     setInput('');
+    requestVersionRef.current += 1;
+    setPending(false);
   };
 
   if (!open) return null;
@@ -203,7 +298,8 @@ export function AskPicoDrawer({ open, context, onClose }: AskPicoDrawerProps) {
               <button
                 key={question}
                 type="button"
-                className="rounded-full bg-pico-soft px-2.5 py-1 text-left text-[11.5px] font-semibold leading-snug text-pico-secondary transition hover:bg-pico-softBlue hover:text-[#2A60A8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(74,144,226,0.18)]"
+                className="rounded-full bg-pico-soft px-2.5 py-1 text-left text-[11.5px] font-semibold leading-snug text-pico-secondary transition hover:bg-pico-softBlue hover:text-[#2A60A8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(74,144,226,0.18)] disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={pending}
                 onClick={() => sendMessage(question)}
               >
                 {question}
@@ -230,6 +326,13 @@ export function AskPicoDrawer({ open, context, onClose }: AskPicoDrawerProps) {
                 </div>
               </div>
             ))}
+            {pending ? (
+              <div className="flex justify-start">
+                <div className="max-w-[90%] rounded-[12px] bg-pico-soft px-3 py-2.5 text-[12.5px] leading-relaxed text-pico-secondary">
+                  Pico is thinking...
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -251,9 +354,10 @@ export function AskPicoDrawer({ open, context, onClose }: AskPicoDrawerProps) {
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 placeholder={contextData.inputPlaceholder}
-                className="min-w-0 flex-1 rounded-[11px] border-[1.5px] border-pico-border bg-pico-bg px-3 py-2.5 text-[13px] text-pico-text outline-none transition placeholder:text-pico-muted focus:border-pico-blue focus:bg-white focus:ring-4 focus:ring-[rgba(74,144,226,0.13)]"
+                disabled={pending}
+                className="min-w-0 flex-1 rounded-[11px] border-[1.5px] border-pico-border bg-pico-bg px-3 py-2.5 text-[13px] text-pico-text outline-none transition placeholder:text-pico-muted focus:border-pico-blue focus:bg-white focus:ring-4 focus:ring-[rgba(74,144,226,0.13)] disabled:cursor-not-allowed disabled:opacity-70"
               />
-              <Button size="sm" type="submit">
+              <Button size="sm" type="submit" disabled={pending}>
                 <Send size={13} />
                 Send
               </Button>

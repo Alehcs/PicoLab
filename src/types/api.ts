@@ -236,10 +236,19 @@ export type AskPicoAction = {
 
 export type AskPicoRequest = {
   context: AskPicoContext;
-  question: string;
+  question?: string;
+  currentPage?: string;
+  messages?: AskPicoMessage[];
+  currentState?: {
+    problemId?: string;
+    stepId?: string;
+    topic?: string;
+    visualTemplate?: string;
+    missionId?: string;
+  };
   problemId?: string;
   pageState?: Record<string, unknown>;
-  history: AskPicoMessage[];
+  history?: AskPicoMessage[];
 };
 
 export type AskPicoResponse = {

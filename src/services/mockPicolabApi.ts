@@ -55,7 +55,7 @@ const mockLearningSignal: LearningSignal = {
 
 const withMockResult = async <T>(data: T, latencyMs = 120): Promise<ApiResult<T>> =>
   new Promise((resolve) => {
-    window.setTimeout(() => {
+    globalThis.setTimeout(() => {
       resolve({
         ok: true,
         source: 'mock',
