@@ -221,7 +221,29 @@ export type PracticeAnswerResponse = {
   supportiveFeedback: string;
   explanation: string;
   earnedPicoPoints: number;
+  picoPointsPreview?: number;
   learningSignal?: LearningSignal;
+};
+
+export type PracticeCompleteRequest = {
+  missionId: string;
+  status?: 'complete';
+};
+
+export type PracticeCompleteResponse = {
+  awardedPicoPoints: number;
+  updatedStreak?: number;
+  updatedLeagueProgress?: {
+    currentLeague: string;
+    nextLeague?: string;
+    picoPoints: number;
+    progress: number;
+  };
+  unlockedBadges?: Array<{
+    id: string;
+    name: string;
+  }>;
+  improvedSignals?: string[];
 };
 
 export type AskPicoContext =

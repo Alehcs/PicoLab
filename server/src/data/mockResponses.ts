@@ -262,7 +262,7 @@ export const dailyPractice = {
 };
 
 export const focusPractice = {
-  id: 'focus-units-in-motion',
+  id: 'units-in-motion',
   title: 'Focus Mission: Units in motion',
   subject: 'physics',
   topic: 'Kinematics',

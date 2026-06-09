@@ -1,5 +1,6 @@
 import { Play, Route } from 'lucide-react';
 import { dailyChallenge } from '../../data/mockMissions';
+import type { Mission } from '../../types/mission';
 import { FormulaBlock } from '../math/FormulaBlock';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -9,10 +10,27 @@ import { StreakRow } from './StreakRow';
 
 type DailyChallengeCardProps = {
   onStart: () => void;
+  mission?: Mission;
+  title?: string;
+  description?: string;
+  problem?: string;
+  formulaHint?: string;
+  streakLabel?: string;
+  streakDays?: string[];
+  completed?: boolean;
 };
 
-export function DailyChallengeCard({ onStart }: DailyChallengeCardProps) {
-  const mission = dailyChallenge.mission;
+export function DailyChallengeCard({
+  onStart,
+  mission = dailyChallenge.mission,
+  title = dailyChallenge.title,
+  description = dailyChallenge.description,
+  problem = dailyChallenge.problem,
+  formulaHint = dailyChallenge.formulaHint,
+  streakLabel = dailyChallenge.streakLabel,
+  streakDays = dailyChallenge.streakDays,
+  completed = false,
+}: DailyChallengeCardProps) {
 
   return (
     <Card className="overflow-hidden px-5 py-5">
@@ -28,25 +46,25 @@ export function DailyChallengeCard({ onStart }: DailyChallengeCardProps) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-[20px] font-extrabold tracking-[-0.025em] text-pico-text">
-                {dailyChallenge.title}
+                {title}
               </h2>
               <p className="mt-1.5 text-[13.5px] leading-relaxed text-pico-secondary">
-                {dailyChallenge.description}
+                {description}
               </p>
             </div>
             <div className="w-fit rounded-full bg-pico-softGreen px-3 py-1.5 text-[12px] font-bold text-[#2A7850]">
-              {dailyChallenge.streakLabel}
+              {completed ? 'Completed' : streakLabel}
             </div>
           </div>
 
           <div className="mt-4 rounded-[14px] bg-pico-soft px-4 py-4">
             <div className="p-section-lbl mb-2">Challenge preview</div>
             <p className="text-[13.5px] leading-relaxed text-pico-secondary">
-              {dailyChallenge.problem}
+              {problem}
             </p>
             <div className="mt-3 inline-flex rounded-[10px] bg-white px-3 py-2">
               <FormulaBlock size="sm" className="font-semibold text-pico-blue">
-                {dailyChallenge.formulaHint}
+                {formulaHint}
               </FormulaBlock>
             </div>
           </div>
@@ -56,7 +74,7 @@ export function DailyChallengeCard({ onStart }: DailyChallengeCardProps) {
               <Play size={15} />
               Start daily challenge
             </Button>
-            <StreakRow days={dailyChallenge.streakDays} />
+            <StreakRow days={streakDays} />
           </div>
         </div>
 

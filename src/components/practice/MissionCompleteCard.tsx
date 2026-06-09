@@ -7,12 +7,23 @@ type MissionCompleteCardProps = {
   onContinueGrowthPath: () => void;
   onTryRandomMission: () => void;
   onReturnToNotebook: () => void;
+  title?: string;
+  copy?: string;
+  stats?: Array<{
+    label: string;
+    value: string;
+  }>;
+  completing?: boolean;
 };
 
 export function MissionCompleteCard({
   onContinueGrowthPath,
   onTryRandomMission,
   onReturnToNotebook,
+  title = missionComplete.title,
+  copy = missionComplete.copy,
+  stats = missionComplete.stats,
+  completing = false,
 }: MissionCompleteCardProps) {
   return (
     <Card variant="progress" className="p-fade px-5 py-5">
@@ -20,16 +31,16 @@ export function MissionCompleteCard({
         <CheckCircle2 size={22} className="mt-0.5 shrink-0 text-[#2A7850]" aria-hidden="true" />
         <div>
           <h2 className="text-[17px] font-extrabold tracking-[-0.02em] text-[#2A7850]">
-            {missionComplete.title}
+            {completing ? 'Saving mission progress' : title}
           </h2>
           <p className="mt-1 text-[13.5px] leading-relaxed text-[#2A7850]">
-            {missionComplete.copy}
+            {completing ? 'Pico is updating your streak and PicoPoints...' : copy}
           </p>
         </div>
       </div>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        {missionComplete.stats.map((stat) => (
+        {stats.map((stat) => (
           <div key={stat.label} className="rounded-[10px] bg-white/70 px-3 py-2.5">
             <div className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-[#2A7850]">
               {stat.label}

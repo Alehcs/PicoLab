@@ -16,7 +16,7 @@ import {
   mockAchievements,
   mockActivity,
 } from '../data/mockProfile';
-import { dailyChallenge, focusMission } from '../data/mockMissions';
+import { dailyChallenge, focusMission, randomMissions } from '../data/mockMissions';
 import { sampleProblem } from '../data/mockProblem';
 import { initialSettingsState } from '../data/mockSettings';
 import { visualLabDefaults } from '../data/mockVisualLab';
@@ -31,6 +31,8 @@ import type {
   ParsedProblem,
   PracticeAnswerRequest,
   PracticeAnswerResponse,
+  PracticeCompleteRequest,
+  PracticeCompleteResponse,
   PracticeMission,
   ProblemEntity,
   ProblemInput,
@@ -145,6 +147,17 @@ const missionFromFocus = (): PracticeMission => ({
   focusSignalId: mockLearningSignal.id,
 });
 
+const missionFromRandom = (): PracticeMission[] =>
+  randomMissions.map((mission) => ({
+    id: mission.id,
+    title: mission.title,
+    subject: mission.subject === 'Math' ? 'math' : 'physics',
+    topic: mission.topic,
+    difficulty: mission.difficulty.toLowerCase() as PracticeMission['difficulty'],
+    prompt: mission.title,
+    rewardPicoPoints: mission.reward.points,
+  }));
+
 export const mockPicolabApi = {
   parseProblem: (_input: ProblemInput) => withMockResult(parsedProblem),
 
@@ -252,6 +265,8 @@ export const mockPicolabApi = {
 
   getFocusPractice: () => withMockResult(missionFromFocus()),
 
+  getRandomPractice: () => withMockResult(missionFromRandom()),
+
   checkPracticeAnswer: (
     request: PracticeAnswerRequest,
   ): Promise<ApiResult<PracticeAnswerResponse>> =>
@@ -264,10 +279,27 @@ export const mockPicolabApi = {
           : focusMission.question.feedbackUsefulSignal,
       explanation: 'Unit cancellation turns m/s² · s into m/s.',
       earnedPicoPoints: request.selectedOptionId === focusMission.question.correctOptionId ? 25 : 0,
+      picoPointsPreview: request.selectedOptionId === focusMission.question.correctOptionId ? 25 : 0,
       learningSignal:
         request.selectedOptionId === focusMission.question.correctOptionId
           ? undefined
           : mockLearningSignal,
+    }),
+
+  completePracticeMission: (
+    _request: PracticeCompleteRequest,
+  ): Promise<ApiResult<PracticeCompleteResponse>> =>
+    withMockResult({
+      awardedPicoPoints: 25,
+      updatedStreak: 6,
+      updatedLeagueProgress: {
+        currentLeague: 'Feather League',
+        nextLeague: 'Wing League',
+        picoPoints: 345,
+        progress: 69,
+      },
+      unlockedBadges: [{ id: 'daily-builder', name: 'Daily Builder' }],
+      improvedSignals: [mockLearningSignal.title],
     }),
 
   askPico: (request: AskPicoRequest): Promise<ApiResult<AskPicoResponse>> => {

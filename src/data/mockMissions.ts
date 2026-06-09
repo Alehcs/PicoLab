@@ -38,7 +38,7 @@ export const focusMission = {
     ],
     correctOptionId: 'meters-per-second',
     feedbackCorrect:
-      'Exactly. One second cancels from s², leaving m/s. That means a · t describes a change in velocity.',
+      'Nice reasoning. One second cancels from s², leaving m/s. That means a · t describes a change in velocity.',
     feedbackUsefulSignal:
       'Useful signal. Let’s look at the units: m/s² · s = m/s. The result describes velocity, not distance.',
   } satisfies PracticeQuestion,

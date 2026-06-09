@@ -52,7 +52,7 @@ practiceRouter.post('/practice/check-answer', (req, res) => {
       isCorrect,
       status: isCorrect ? 'strong' : 'needsAttention',
       supportiveFeedback: isCorrect
-        ? 'Exactly. The unit simplifies to m/s, which describes velocity.'
+        ? 'Nice reasoning. The unit simplifies to m/s, which describes velocity.'
         : 'Useful signal. Try reducing the units before choosing the quantity.',
       explanation: 'm/s² · s cancels one second and leaves m/s.',
       learningSignal: isCorrect ? undefined : unitLearningSignal,

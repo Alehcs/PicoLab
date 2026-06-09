@@ -10,6 +10,10 @@ import type {
   LearningSignalKind,
   ParsedProblem,
   PracticeAnswerRequest,
+  PracticeAnswerResponse,
+  PracticeCompleteRequest,
+  PracticeCompleteResponse,
+  PracticeMission,
   ProblemEntity,
   ProblemInput,
   ProblemScanInput,
@@ -21,6 +25,7 @@ import type {
 const activeApi = mockPicolabApi;
 const ASK_PICO_TIMEOUT_MS = 4000;
 const CORE_FLOW_TIMEOUT_MS = 4000;
+const PRACTICE_TIMEOUT_MS = 4000;
 
 type BackendAskPicoEnvelope = {
   ok?: boolean;
@@ -154,6 +159,42 @@ type BackendStepCheckEnvelope = {
   };
 };
 
+type BackendPracticeEnvelope = {
+  ok?: boolean;
+  data?: Record<string, unknown>;
+};
+
+type BackendRandomPracticeEnvelope = {
+  ok?: boolean;
+  data?: {
+    missions?: unknown;
+  };
+};
+
+type BackendPracticeAnswerEnvelope = {
+  ok?: boolean;
+  data?: {
+    isCorrect?: unknown;
+    status?: unknown;
+    supportiveFeedback?: unknown;
+    explanation?: unknown;
+    earnedPicoPoints?: unknown;
+    picoPointsPreview?: unknown;
+    learningSignal?: unknown;
+  };
+};
+
+type BackendPracticeCompleteEnvelope = {
+  ok?: boolean;
+  data?: {
+    awardedPicoPoints?: unknown;
+    updatedStreak?: unknown;
+    updatedLeagueProgress?: unknown;
+    unlockedBadges?: unknown;
+    improvedSignals?: unknown;
+  };
+};
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value && typeof value === 'object');
 
@@ -217,6 +258,134 @@ const normalizeLearningSignal = (value: unknown): LearningSignal | undefined => 
     strength: typeof value.strength === 'number' ? value.strength : 1,
     suggestedFocus:
       typeof value.suggestedFocus === 'string' ? value.suggestedFocus : 'Review this step',
+  };
+};
+
+const normalizePracticeMission = (value: unknown): PracticeMission | null => {
+  if (!isRecord(value)) return null;
+
+  const id = typeof value.id === 'string' ? value.id : '';
+  const title = typeof value.title === 'string' ? value.title : '';
+  const prompt =
+    typeof value.prompt === 'string' && value.prompt.trim()
+      ? value.prompt
+      : title;
+  const rewardPicoPoints =
+    typeof value.rewardPicoPoints === 'number' && Number.isFinite(value.rewardPicoPoints)
+      ? value.rewardPicoPoints
+      : 0;
+
+  if (!id || !title || !prompt) return null;
+
+  const options = Array.isArray(value.options)
+    ? value.options
+        .filter(isRecord)
+        .map((option) => ({
+          id: typeof option.id === 'string' ? option.id : '',
+          label: typeof option.label === 'string' ? option.label : '',
+        }))
+        .filter((option) => option.id && option.label)
+    : undefined;
+
+  return {
+    id,
+    title,
+    subject: value.subject === 'math' ? 'math' : 'physics',
+    topic: typeof value.topic === 'string' ? value.topic : 'Practice',
+    difficulty:
+      value.difficulty === 'easy' || value.difficulty === 'hard'
+        ? value.difficulty
+        : 'medium',
+    prompt,
+    options,
+    rewardPicoPoints,
+    focusSignalId: typeof value.focusSignalId === 'string' ? value.focusSignalId : undefined,
+  };
+};
+
+const normalizePracticeAnswer = (
+  payload: BackendPracticeAnswerEnvelope,
+): PracticeAnswerResponse | null => {
+  if (!payload.ok || !payload.data) return null;
+
+  const { data } = payload;
+  const supportiveFeedback =
+    typeof data.supportiveFeedback === 'string' ? data.supportiveFeedback : '';
+  const explanation = typeof data.explanation === 'string' ? data.explanation : supportiveFeedback;
+
+  if (!supportiveFeedback || !explanation) return null;
+
+  const previewPoints =
+    typeof data.picoPointsPreview === 'number'
+      ? data.picoPointsPreview
+      : typeof data.earnedPicoPoints === 'number'
+        ? data.earnedPicoPoints
+        : 0;
+
+  return {
+    status: data.status === 'strong' || data.status === 'complete' ? 'complete' : 'needsAttention',
+    supportiveFeedback,
+    explanation,
+    earnedPicoPoints: previewPoints,
+    picoPointsPreview: previewPoints,
+    learningSignal: normalizeLearningSignal(data.learningSignal),
+  };
+};
+
+const normalizePracticeComplete = (
+  payload: BackendPracticeCompleteEnvelope,
+): PracticeCompleteResponse | null => {
+  if (!payload.ok || !payload.data) return null;
+
+  const { data } = payload;
+  const awardedPicoPoints =
+    typeof data.awardedPicoPoints === 'number' && Number.isFinite(data.awardedPicoPoints)
+      ? data.awardedPicoPoints
+      : null;
+
+  if (awardedPicoPoints === null) return null;
+
+  const updatedLeagueProgress = isRecord(data.updatedLeagueProgress)
+    ? {
+        currentLeague:
+          typeof data.updatedLeagueProgress.currentLeague === 'string'
+            ? data.updatedLeagueProgress.currentLeague
+            : 'Feather League',
+        nextLeague:
+          typeof data.updatedLeagueProgress.nextLeague === 'string'
+            ? data.updatedLeagueProgress.nextLeague
+            : undefined,
+        picoPoints:
+          typeof data.updatedLeagueProgress.picoPoints === 'number'
+            ? data.updatedLeagueProgress.picoPoints
+            : awardedPicoPoints,
+        progress:
+          typeof data.updatedLeagueProgress.progress === 'number'
+            ? data.updatedLeagueProgress.progress
+            : 0,
+      }
+    : undefined;
+
+  const unlockedBadges = Array.isArray(data.unlockedBadges)
+    ? data.unlockedBadges.filter(isRecord).map((badge, index) => ({
+        id: typeof badge.id === 'string' ? badge.id : `badge-${index + 1}`,
+        name: typeof badge.name === 'string' ? badge.name : 'Practice badge',
+      }))
+    : undefined;
+
+  const improvedSignals = Array.isArray(data.improvedSignals)
+    ? data.improvedSignals.filter((signal): signal is string => typeof signal === 'string')
+    : undefined;
+
+  return {
+    awardedPicoPoints,
+    updatedStreak:
+      typeof data.updatedStreak === 'number' && Number.isFinite(data.updatedStreak)
+        ? data.updatedStreak
+        : undefined,
+    updatedLeagueProgress,
+    unlockedBadges,
+    improvedSignals,
   };
 };
 
@@ -415,6 +584,108 @@ const checkStepWithFallback = async (
   return fallbackWithWarning('Notebook check-step', backendResult, activeApi.checkStep(request));
 };
 
+const getDailyPracticeWithFallback = async (): Promise<ApiResult<PracticeMission>> => {
+  const backendResult = await apiClient.get<BackendPracticeEnvelope>('/practice/daily', {
+    timeoutMs: PRACTICE_TIMEOUT_MS,
+  });
+
+  if (backendResult.ok) {
+    const mission = normalizePracticeMission(backendResult.data.data);
+
+    if (mission) {
+      return { ok: true, source: 'backend', data: mission };
+    }
+  }
+
+  return fallbackWithWarning('Practice daily', backendResult, activeApi.getDailyPractice());
+};
+
+const getFocusPracticeWithFallback = async (): Promise<ApiResult<PracticeMission>> => {
+  const backendResult = await apiClient.get<BackendPracticeEnvelope>('/practice/focus', {
+    timeoutMs: PRACTICE_TIMEOUT_MS,
+  });
+
+  if (backendResult.ok) {
+    const mission = normalizePracticeMission(backendResult.data.data);
+
+    if (mission?.options?.length) {
+      return { ok: true, source: 'backend', data: mission };
+    }
+  }
+
+  return fallbackWithWarning('Practice focus', backendResult, activeApi.getFocusPractice());
+};
+
+const getRandomPracticeWithFallback = async (): Promise<ApiResult<PracticeMission[]>> => {
+  const backendResult = await apiClient.get<BackendRandomPracticeEnvelope>('/practice/random', {
+    timeoutMs: PRACTICE_TIMEOUT_MS,
+  });
+
+  if (backendResult.ok && Array.isArray(backendResult.data.data?.missions)) {
+    const missions = backendResult.data.data.missions
+      .map(normalizePracticeMission)
+      .filter((mission): mission is PracticeMission => Boolean(mission));
+
+    if (missions.length) {
+      return { ok: true, source: 'backend', data: missions };
+    }
+  }
+
+  return fallbackWithWarning('Practice random', backendResult, activeApi.getRandomPractice());
+};
+
+const checkPracticeAnswerWithFallback = async (
+  request: PracticeAnswerRequest,
+): Promise<ApiResult<PracticeAnswerResponse>> => {
+  const backendResult = await apiClient.post<BackendPracticeAnswerEnvelope>(
+    '/practice/check-answer',
+    request,
+    {
+      timeoutMs: PRACTICE_TIMEOUT_MS,
+    },
+  );
+
+  if (backendResult.ok) {
+    const answer = normalizePracticeAnswer(backendResult.data);
+
+    if (answer) {
+      return { ok: true, source: 'backend', data: answer };
+    }
+  }
+
+  return fallbackWithWarning(
+    'Practice answer check',
+    backendResult,
+    activeApi.checkPracticeAnswer(request),
+  );
+};
+
+const completePracticeMissionWithFallback = async (
+  request: PracticeCompleteRequest,
+): Promise<ApiResult<PracticeCompleteResponse>> => {
+  const backendResult = await apiClient.post<BackendPracticeCompleteEnvelope>(
+    '/practice/complete',
+    request,
+    {
+      timeoutMs: PRACTICE_TIMEOUT_MS,
+    },
+  );
+
+  if (backendResult.ok) {
+    const completion = normalizePracticeComplete(backendResult.data);
+
+    if (completion) {
+      return { ok: true, source: 'backend', data: completion };
+    }
+  }
+
+  return fallbackWithWarning(
+    'Practice mission completion',
+    backendResult,
+    activeApi.completePracticeMission(request),
+  );
+};
+
 export const picolabApi = {
   parseProblem: (input: ProblemInput) => parseProblemWithFallback(input),
   scanProblem: (input: ProblemScanInput) => scanProblemWithFallback(input),
@@ -426,9 +697,12 @@ export const picolabApi = {
     activeApi.selectVisualTemplate(request),
   getGrowthMap: () => activeApi.getGrowthMap(),
   getGrowthPath: () => activeApi.getGrowthPath(),
-  getDailyPractice: () => activeApi.getDailyPractice(),
-  getFocusPractice: () => activeApi.getFocusPractice(),
-  checkPracticeAnswer: (request: PracticeAnswerRequest) => activeApi.checkPracticeAnswer(request),
+  getDailyPractice: () => getDailyPracticeWithFallback(),
+  getFocusPractice: () => getFocusPracticeWithFallback(),
+  getRandomPractice: () => getRandomPracticeWithFallback(),
+  checkPracticeAnswer: (request: PracticeAnswerRequest) => checkPracticeAnswerWithFallback(request),
+  completePracticeMission: (request: PracticeCompleteRequest) =>
+    completePracticeMissionWithFallback(request),
   askPico: (request: AskPicoRequest) => askPicoWithFallback(request),
   getProfile: () => activeApi.getProfile(),
   getSettings: () => activeApi.getSettings(),
@@ -445,7 +719,9 @@ export const {
   getGrowthPath,
   getDailyPractice,
   getFocusPractice,
+  getRandomPractice,
   checkPracticeAnswer,
+  completePracticeMission,
   askPico,
   getProfile,
   getSettings,
