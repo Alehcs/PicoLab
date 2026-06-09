@@ -19,8 +19,13 @@ import {
   type GrowthPathStepData,
   recommendedGrowthStep,
 } from '../data/mockGrowth';
-import { readLearningProgress } from '../services/learningProgress';
+import {
+  getPrioritizedDiagnosticSignals,
+  getSuggestedGrowthFocusFromSignals,
+  readLearningProgress,
+} from '../services/learningProgress';
 import { picolabApi } from '../services/picolabApi';
+import { storeVisualLabSuggestionFromSignals } from '../services/visualLabSuggestion';
 import type { GrowthPathResponse } from '../types/api';
 
 const localGrowthPath: GrowthPathResponse = {
@@ -72,6 +77,7 @@ export function GrowthPathPage() {
   const [regenerating, setRegenerating] = useState(false);
   const [growthPath, setGrowthPath] = useState(localGrowthPath);
   const [localProgress] = useState(() => readLearningProgress());
+  const [diagnosticSignals] = useState(() => getPrioritizedDiagnosticSignals(4));
 
   useEffect(() => {
     let isMounted = true;
@@ -111,6 +117,11 @@ export function GrowthPathPage() {
     [growthPath.steps],
   );
   const recommendedStep = roadmapSteps[0] ?? growthPathSteps[0];
+  const diagnosticFocus = useMemo(
+    () => getSuggestedGrowthFocusFromSignals(diagnosticSignals),
+    [diagnosticSignals],
+  );
+  const recommendedFocus = diagnosticFocus ?? growthPath.recommendedFocus;
 
   const regeneratePath = async () => {
     if (regenerating) return;
@@ -133,7 +144,15 @@ export function GrowthPathPage() {
   };
 
   const goToRoute = (route?: string) => {
+    if (route === '/visual-lab') {
+      storeVisualLabSuggestionFromSignals(diagnosticSignals);
+    }
     if (route) navigate(route);
+  };
+
+  const openVisualLesson = () => {
+    storeVisualLabSuggestionFromSignals(diagnosticSignals);
+    navigate('/visual-lab');
   };
 
   return (
@@ -185,11 +204,14 @@ export function GrowthPathPage() {
           }
         >
           <Badge variant="blue">{recommendedGrowthStep.title}</Badge>
+          {diagnosticSignals.length ? (
+            <Badge variant="green">Recommended from recent signals</Badge>
+          ) : null}
           {localProgress.completedMissionIds.length ? (
             <Badge variant="green">Practice progress synced</Badge>
           ) : null}
           <h2 className="mt-3 text-[21px] font-extrabold tracking-[-0.025em] text-pico-text">
-            {growthPath.recommendedFocus}
+            {recommendedFocus}
           </h2>
           <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-pico-secondary">
             {recommendedStep.reason}
@@ -205,7 +227,7 @@ export function GrowthPathPage() {
               <Target size={14} />
               Start practice mission
             </Button>
-            <Button variant="secondary" onClick={() => navigate('/visual-lab')}>
+            <Button variant="secondary" onClick={openVisualLesson}>
               <FlaskConical size={14} />
               Open visual lesson
             </Button>

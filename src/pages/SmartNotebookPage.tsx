@@ -18,6 +18,7 @@ import {
 } from '../data/mockNotebook';
 import { picolabApi } from '../services/picolabApi';
 import { readCurrentProblem } from '../services/problemSession';
+import { storeVisualLabSuggestionFromSignals } from '../services/visualLabSuggestion';
 import type { ProblemEntity, StepCheckResponse } from '../types/api';
 
 const createProblemFromEntity = (problem: ProblemEntity | null): NotebookProblem => {
@@ -56,7 +57,13 @@ export function SmartNotebookPage() {
     [currentProblem],
   );
 
-  const openVisualLab = () => navigate('/visual-lab');
+  const openVisualLab = () => {
+    storeVisualLabSuggestionFromSignals(
+      stepCheckResult?.signals ??
+        (stepCheckResult?.primarySignal ? [stepCheckResult.primarySignal] : undefined),
+    );
+    navigate('/visual-lab');
+  };
   const viewGrowthMap = () => navigate('/growth-map');
   const viewGrowthPath = () => navigate('/growth-path');
 

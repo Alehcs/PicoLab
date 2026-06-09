@@ -11,6 +11,7 @@ import { AskPicoDrawer } from '../components/pico/AskPicoDrawer';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { visualLabCopy, visualLabDefaults, visualModes } from '../data/mockVisualLab';
+import { readVisualLabSuggestion } from '../services/visualLabSuggestion';
 
 export function VisualLabPage() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export function VisualLabPage() {
   const [playing, setPlaying] = useState(false);
   const [slowMotion, setSlowMotion] = useState(false);
   const [askPicoOpen, setAskPicoOpen] = useState(false);
+  const [suggestedTemplate] = useState(() => readVisualLabSuggestion());
 
   const finalVelocity = useMemo(
     () => initialVelocity + acceleration * time,
@@ -81,6 +83,9 @@ export function VisualLabPage() {
               {visualLabCopy.title}
             </h1>
             <Badge variant="blue">{visualLabCopy.mission}</Badge>
+            {suggestedTemplate ? (
+              <Badge variant="green">Suggested: {suggestedTemplate.label}</Badge>
+            ) : null}
           </div>
           <p className="mt-1.5 max-w-xl text-[13.5px] leading-relaxed text-pico-secondary">
             {visualLabCopy.subtitle}
@@ -102,7 +107,9 @@ export function VisualLabPage() {
       <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <VisualModeSelector modes={visualModes} />
         <span className="text-[12.5px] font-medium text-pico-muted">
-          Template engine preview
+          {suggestedTemplate
+            ? `Prepared from signal: ${suggestedTemplate.reason}`
+            : 'Template engine preview'}
         </span>
       </div>
 

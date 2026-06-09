@@ -18,6 +18,7 @@ import {
   loadPracticeProgress,
   type PracticeProgress,
 } from '../services/practiceProgress';
+import { storeVisualLabSuggestionFromSignals } from '../services/visualLabSuggestion';
 import type {
   PracticeAnswerResponse,
   PracticeCompleteResponse,
@@ -292,6 +293,14 @@ export function PracticeMissionsPage() {
     setRandomPreview(nextMission.title);
   };
 
+  const openVisualLab = () => {
+    storeVisualLabSuggestionFromSignals(
+      answerResult?.signals ??
+        (answerResult?.primarySignal ? [answerResult.primarySignal] : undefined),
+    );
+    navigate('/visual-lab');
+  };
+
   return (
     <div className="p-fade">
       <PageHeader
@@ -345,7 +354,7 @@ export function PracticeMissionsPage() {
               completed={focusMissionCompleted}
               onSelect={selectOption}
               onCheck={checkAnswer}
-              onOpenVisualLab={() => navigate('/visual-lab')}
+              onOpenVisualLab={openVisualLab}
               onViewGrowthPath={() => navigate('/growth-path')}
             />
           </section>

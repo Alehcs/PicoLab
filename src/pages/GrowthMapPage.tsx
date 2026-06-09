@@ -20,8 +20,13 @@ import {
   type GrowthSummaryCardData,
   type GrowthFilter,
 } from '../data/mockGrowth';
-import { mergeGrowthMapWithLocalProgress } from '../services/learningProgress';
+import {
+  getPrioritizedDiagnosticSignals,
+  getSuggestedGrowthFocusFromSignals,
+  mergeGrowthMapWithLocalProgress,
+} from '../services/learningProgress';
 import { picolabApi } from '../services/picolabApi';
+import { storeVisualLabSuggestionFromSignals } from '../services/visualLabSuggestion';
 import type { GrowthMapResponse, LearningSignal } from '../types/api';
 
 const filterTabs: Array<TabItem<GrowthFilter>> = growthFilters.map((filter) => ({
@@ -84,7 +89,7 @@ const signalVariantByKind: Record<LearningSignal['kind'], GrowthSignal['variant'
 
 const toGrowthSignal = (signal: LearningSignal): GrowthSignal => ({
   id: signal.id,
-  title: signal.title,
+  title: signal.studentFriendlyLabel ?? signal.title,
   badge: signal.id.startsWith('local-') ? 'Improving' : `Seen ${signal.strength} times`,
   description: signal.description,
   whyItMatters:
@@ -136,8 +141,16 @@ export function GrowthMapPage() {
     () => growthMap.learningSignals.map(toGrowthSignal),
     [growthMap.learningSignals],
   );
+  const prioritizedSignals = useMemo(() => getPrioritizedDiagnosticSignals(4), []);
+  const diagnosticFocus = useMemo(
+    () => getSuggestedGrowthFocusFromSignals(prioritizedSignals),
+    [prioritizedSignals],
+  );
 
   const goToRoute = (route?: string) => {
+    if (route === '/visual-lab') {
+      storeVisualLabSuggestionFromSignals(prioritizedSignals);
+    }
     if (route) navigate(route);
   };
 
@@ -165,7 +178,7 @@ export function GrowthMapPage() {
 
       <SuggestedDirectionCard
         title={growthMapSuggestedDirection.title}
-        content={`Based on your recent learning signals, your best next focus is ${growthMap.mainFocus}.`}
+        content={`Based on your recent learning signals, your best next focus is ${diagnosticFocus ?? growthMap.mainFocus}.`}
         cta={growthMapSuggestedDirection.cta}
         onContinue={() => navigate(growthMapSuggestedDirection.route)}
       />
