@@ -1,4 +1,6 @@
 import { loadPracticeProgress } from './practiceProgress';
+import { loadDiagnosticSignals } from './diagnosticPersistence';
+import { getSignalDefinition } from '../data/learningSignals';
 import type { GrowthSignal } from '../data/mockGrowth';
 import type { ActivityItem, Achievement, LeagueProgress, ProfileStat } from '../types/profile';
 import type { GrowthMapResponse, LearningSignal, ProfileResponse } from '../types/api';
@@ -14,15 +16,46 @@ export const readLearningProgress = () => loadPracticeProgress();
 
 export const localImprovedSignalsAsLearningSignals = (): LearningSignal[] => {
   const progress = readLearningProgress();
+  const diagnosticSignals = loadDiagnosticSignals();
+  const persistedSignals = diagnosticSignals.map((signal) => {
+    const definition = getSignalDefinition(signal.signalId);
 
-  return (progress.improvedSignals ?? []).map((signal, index) => ({
-    id: `local-${signalIdFromLabel(signal) || index + 1}`,
-    kind: 'unitMismatch',
-    title: signal,
-    description: 'Recent practice shows this signal is improving.',
-    strength: 2,
-    suggestedFocus: signal,
-  }));
+    return {
+      id: signal.signalId,
+      kind:
+        signal.category === 'algebra'
+          ? 'signSlip'
+          : signal.category === 'formula'
+            ? 'formulaSelection'
+            : signal.category === 'concept'
+              ? 'quantityConfusion'
+              : signal.category === 'graph'
+                ? 'graphReading'
+                : 'unitMismatch',
+      signalId: signal.signalId,
+      category: signal.category,
+      subtype: signal.signalId.split('.')[1],
+      studentFriendlyLabel: definition?.studentFriendlyLabel,
+      title: definition?.title ?? signal.signalId,
+      description: definition?.description ?? signal.evidence,
+      strength: signal.severity === 'high' ? 5 : signal.severity === 'medium' ? 3 : 1,
+      suggestedFocus: definition?.growthPathFocus[0] ?? definition?.suggestedPractice[0] ?? signal.signalId,
+      suggestedPractice: signal.suggestedPractice ?? definition?.suggestedPractice,
+      suggestedVisualTemplate: signal.suggestedVisualTemplate ?? definition?.suggestedVisualTemplate,
+    } satisfies LearningSignal;
+  });
+
+  return [
+    ...persistedSignals,
+    ...(progress.improvedSignals ?? []).map((signal, index) => ({
+      id: `local-${signalIdFromLabel(signal) || index + 1}`,
+      kind: 'unitMismatch',
+      title: signal,
+      description: 'Recent practice shows this signal is improving.',
+      strength: 2,
+      suggestedFocus: signal,
+    }) satisfies LearningSignal),
+  ];
 };
 
 export const mergeGrowthMapWithLocalProgress = (

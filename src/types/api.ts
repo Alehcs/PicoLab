@@ -1,4 +1,8 @@
-import type { LearningSignalCategory } from './learningSignals';
+import type {
+  DiagnosticResult,
+  LearningSignalCategory,
+  LearningSignalInstance,
+} from './learningSignals';
 
 export type ApiError = {
   code: string;
@@ -146,6 +150,9 @@ export type StepCheckResponse = {
   suggestedNextStep?: string;
   suggestedNextAction?: string;
   learningSignal?: LearningSignal;
+  primarySignal?: LearningSignalInstance;
+  signals?: LearningSignalInstance[];
+  diagnostic?: DiagnosticResult;
 };
 
 export type VisualTemplateId =
@@ -237,6 +244,9 @@ export type PracticeAnswerResponse = {
   earnedPicoPoints: number;
   picoPointsPreview?: number;
   learningSignal?: LearningSignal;
+  primarySignal?: LearningSignalInstance;
+  signals?: LearningSignalInstance[];
+  diagnostic?: DiagnosticResult;
 };
 
 export type PracticeCompleteRequest = {

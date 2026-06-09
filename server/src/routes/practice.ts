@@ -3,9 +3,9 @@ import {
   dailyPractice,
   focusPractice,
   randomPractice,
-  unitCancellationLearningSignal,
 } from '../data/mockResponses.js';
 import { createResponseMeta } from '../middleware/errorHandler.js';
+import { learningSignalFromInstance, runMockDiagnostic } from '../services/diagnosticEngine.js';
 
 export const practiceRouter = Router();
 
@@ -45,6 +45,20 @@ practiceRouter.get('/practice/random', (_req, res) => {
 practiceRouter.post('/practice/check-answer', (req, res) => {
   const selectedOptionId = req.body?.selectedOptionId ?? req.body?.answer;
   const isCorrect = selectedOptionId === 'meters-per-second' || selectedOptionId === 'm/s';
+  const answer = typeof req.body?.answer === 'string' ? req.body.answer : String(selectedOptionId ?? '');
+  const diagnostic = isCorrect
+    ? undefined
+    : runMockDiagnostic({
+        source: 'practice',
+        studentAnswer: answer,
+        expectedAnswer: 'm/s',
+        expectedUnit: 'm/s',
+        expectedQuantity: 'velocity',
+        problemText:
+          'If acceleration is measured in m/s² and time is measured in s, what unit should a · t have?',
+        missionId: typeof req.body?.missionId === 'string' ? req.body.missionId : 'units-in-motion',
+      });
+  const learningSignal = learningSignalFromInstance(diagnostic?.primarySignal);
 
   res.json({
     ok: true,
@@ -53,9 +67,12 @@ practiceRouter.post('/practice/check-answer', (req, res) => {
       status: isCorrect ? 'strong' : 'needsAttention',
       supportiveFeedback: isCorrect
         ? 'Nice reasoning. The unit simplifies to m/s, which describes velocity.'
-        : 'Useful signal. Try reducing the units before choosing the quantity.',
-      explanation: 'm/s² · s cancels one second and leaves m/s.',
-      learningSignal: isCorrect ? undefined : unitCancellationLearningSignal,
+        : diagnostic?.supportiveFeedback ?? 'Useful signal. Try reducing the units before choosing the quantity.',
+      explanation: diagnostic?.whyItMatters ?? 'm/s² · s cancels one second and leaves m/s.',
+      learningSignal,
+      primarySignal: diagnostic?.primarySignal,
+      signals: diagnostic?.signals ?? [],
+      diagnostic,
       picoPointsPreview: isCorrect ? 25 : 0,
       source: 'mock',
     },

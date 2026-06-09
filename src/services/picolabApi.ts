@@ -27,6 +27,7 @@ import type {
   VisualLabTemplateRequest,
   StepCheckResponse,
 } from '../types/api';
+import type { DiagnosticResult, LearningSignalInstance } from '../types/learningSignals';
 
 const activeApi = mockPicolabApi;
 const ASK_PICO_TIMEOUT_MS = 4000;
@@ -164,6 +165,9 @@ type BackendStepCheckEnvelope = {
     suggestedNextAction?: unknown;
     suggestedNextStep?: unknown;
     learningSignal?: unknown;
+    primarySignal?: unknown;
+    signals?: unknown;
+    diagnostic?: unknown;
   };
 };
 
@@ -189,6 +193,9 @@ type BackendPracticeAnswerEnvelope = {
     earnedPicoPoints?: unknown;
     picoPointsPreview?: unknown;
     learningSignal?: unknown;
+    primarySignal?: unknown;
+    signals?: unknown;
+    diagnostic?: unknown;
   };
 };
 
@@ -340,6 +347,74 @@ const normalizeLearningSignal = (value: unknown): LearningSignal | undefined => 
   };
 };
 
+const normalizeLearningSignalInstance = (value: unknown): LearningSignalInstance | undefined => {
+  if (!isRecord(value)) return undefined;
+
+  const signalId = typeof value.signalId === 'string' ? value.signalId : undefined;
+  const category =
+    typeof value.category === 'string' &&
+    learningSignalCategories.includes(value.category as (typeof learningSignalCategories)[number])
+      ? (value.category as LearningSignalInstance['category'])
+      : undefined;
+
+  if (!signalId || !category) return undefined;
+
+  return {
+    id: typeof value.id === 'string' ? value.id : signalId,
+    signalId,
+    category,
+    severity:
+      value.severity === 'high' || value.severity === 'low' ? value.severity : 'medium',
+    status:
+      value.status === 'practicing' || value.status === 'improving' || value.status === 'stable'
+        ? value.status
+        : 'new',
+    confidence: typeof value.confidence === 'number' ? value.confidence : 0.7,
+    evidence: typeof value.evidence === 'string' ? value.evidence : 'Diagnostic evidence',
+    source:
+      value.source === 'practice' ||
+      value.source === 'askPico' ||
+      value.source === 'growthMap' ||
+      value.source === 'mockDiagnostic'
+        ? value.source
+        : 'notebook',
+    createdAt: typeof value.createdAt === 'string' ? value.createdAt : new Date().toISOString(),
+    relatedProblemId: typeof value.relatedProblemId === 'string' ? value.relatedProblemId : undefined,
+    relatedStepId: typeof value.relatedStepId === 'string' ? value.relatedStepId : undefined,
+    suggestedPractice: Array.isArray(value.suggestedPractice)
+      ? value.suggestedPractice.filter((item): item is string => typeof item === 'string')
+      : undefined,
+    suggestedVisualTemplate:
+      typeof value.suggestedVisualTemplate === 'string' ? value.suggestedVisualTemplate : undefined,
+  };
+};
+
+const normalizeDiagnosticResult = (value: unknown): DiagnosticResult | undefined => {
+  if (!isRecord(value)) return undefined;
+
+  const signals = Array.isArray(value.signals)
+    ? value.signals
+        .map(normalizeLearningSignalInstance)
+        .filter((signal): signal is LearningSignalInstance => Boolean(signal))
+    : [];
+
+  return {
+    primarySignal: normalizeLearningSignalInstance(value.primarySignal) ?? signals[0],
+    signals,
+    supportiveFeedback:
+      typeof value.supportiveFeedback === 'string' ? value.supportiveFeedback : 'Useful signal found.',
+    whatWentWell: typeof value.whatWentWell === 'string' ? value.whatWentWell : undefined,
+    whatToAdjust: typeof value.whatToAdjust === 'string' ? value.whatToAdjust : undefined,
+    whyItMatters: typeof value.whyItMatters === 'string' ? value.whyItMatters : undefined,
+    suggestedPractice: Array.isArray(value.suggestedPractice)
+      ? value.suggestedPractice.filter((item): item is string => typeof item === 'string')
+      : [],
+    suggestedVisualTemplate:
+      typeof value.suggestedVisualTemplate === 'string' ? value.suggestedVisualTemplate : undefined,
+    confidence: typeof value.confidence === 'number' ? value.confidence : 0.7,
+  };
+};
+
 const normalizePracticeMission = (value: unknown): PracticeMission | null => {
   if (!isRecord(value)) return null;
 
@@ -408,6 +483,13 @@ const normalizePracticeAnswer = (
     earnedPicoPoints: previewPoints,
     picoPointsPreview: previewPoints,
     learningSignal: normalizeLearningSignal(data.learningSignal),
+    primarySignal: normalizeLearningSignalInstance(data.primarySignal),
+    signals: Array.isArray(data.signals)
+      ? data.signals
+          .map(normalizeLearningSignalInstance)
+          .filter((signal): signal is LearningSignalInstance => Boolean(signal))
+      : undefined,
+    diagnostic: normalizeDiagnosticResult(data.diagnostic),
   };
 };
 
@@ -832,6 +914,13 @@ const checkStepWithFallback = async (
           suggestedNextAction:
             typeof data.suggestedNextAction === 'string' ? data.suggestedNextAction : undefined,
           learningSignal: normalizeLearningSignal(data.learningSignal),
+          primarySignal: normalizeLearningSignalInstance(data.primarySignal),
+          signals: Array.isArray(data.signals)
+            ? data.signals
+                .map(normalizeLearningSignalInstance)
+                .filter((signal): signal is LearningSignalInstance => Boolean(signal))
+            : undefined,
+          diagnostic: normalizeDiagnosticResult(data.diagnostic),
         },
       };
     }

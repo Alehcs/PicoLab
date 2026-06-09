@@ -1,4 +1,8 @@
-import type { LearningSignalCategory } from './learningSignals.js';
+import type {
+  DiagnosticResult,
+  LearningSignalCategory,
+  LearningSignalInstance,
+} from './learningSignals.js';
 
 export type ApiMode = 'mock';
 
@@ -29,7 +33,13 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
 
 export type LearningSignal = {
   id: string;
-  kind: 'unitMismatch' | 'signSlip' | 'quantityConfusion' | 'formulaSelection';
+  kind:
+    | 'unitMismatch'
+    | 'signSlip'
+    | 'quantityConfusion'
+    | 'formulaSelection'
+    | 'reasoningGap'
+    | 'graphReading';
   signalId?: string;
   category?: LearningSignalCategory;
   subtype?: string;
@@ -96,4 +106,10 @@ export type AskPicoResponse = {
   suggestedActions: AskPicoAction[];
   learningSignal?: LearningSignal;
   source: 'mock';
+};
+
+export type DiagnosticPayload = {
+  primarySignal?: LearningSignalInstance;
+  signals?: LearningSignalInstance[];
+  diagnostic?: DiagnosticResult;
 };

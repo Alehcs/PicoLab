@@ -21,6 +21,8 @@ import { sampleProblem } from '../data/mockProblem';
 import { initialSettingsState } from '../data/mockSettings';
 import { visualLabDefaults } from '../data/mockVisualLab';
 import { getSignalDefinition } from '../data/learningSignals';
+import { learningSignalFromInstance, runMockDiagnostic } from './diagnosticEngine';
+import { appendDiagnosticSignals } from './diagnosticPersistence';
 import type {
   ApiResult,
   AskPicoRequest,
@@ -51,7 +53,6 @@ import type {
 
 const MOCK_PROBLEM_ID = 'mock-problem-final-velocity';
 const finalUnitSignalDefinition = getSignalDefinition('units.final_unit_mismatch');
-const unitCancellationSignalDefinition = getSignalDefinition('units.unit_cancellation');
 
 const mockLearningSignal: LearningSignal = {
   id: 'units.final_unit_mismatch',
@@ -69,23 +70,6 @@ const mockLearningSignal: LearningSignal = {
   suggestedPractice: finalUnitSignalDefinition?.suggestedPractice,
   suggestedVisualTemplate: finalUnitSignalDefinition?.suggestedVisualTemplate,
   sourceProblemId: MOCK_PROBLEM_ID,
-};
-
-const practiceUnitSignal: LearningSignal = {
-  id: 'units.unit_cancellation',
-  kind: 'unitMismatch',
-  signalId: 'units.unit_cancellation',
-  category: 'units',
-  subtype: 'unit_cancellation',
-  studentFriendlyLabel: unitCancellationSignalDefinition?.studentFriendlyLabel,
-  title: unitCancellationSignalDefinition?.title ?? 'Unit cancellation',
-  description:
-    unitCancellationSignalDefinition?.description ??
-    'The unit cancellation needs a little support.',
-  strength: 3,
-  suggestedFocus: unitCancellationSignalDefinition?.growthPathFocus[0] ?? 'Unit reasoning',
-  suggestedPractice: unitCancellationSignalDefinition?.suggestedPractice,
-  suggestedVisualTemplate: unitCancellationSignalDefinition?.suggestedVisualTemplate,
 };
 
 const withMockResult = async <T>(data: T, latencyMs = 120): Promise<ApiResult<T>> =>
@@ -242,14 +226,38 @@ export const mockPicolabApi = {
       picoNote: 'You are close. The calculation is working; now match the unit to velocity.',
     }),
 
-  checkStep: (_request: StepCheckRequest): Promise<ApiResult<StepCheckResponse>> =>
-    withMockResult({
-      stepStatus: 'needsAttention',
-      supportiveFeedback: 'Your calculation is on track. The adjustment is the final unit.',
-      explanation: 'Acceleration times time leaves m/s, so the result describes velocity.',
+  checkStep: (request: StepCheckRequest): Promise<ApiResult<StepCheckResponse>> => {
+    const diagnostic = runMockDiagnostic({
+      source: 'notebook',
+      studentStep: request.studentInput,
+      studentAnswer: request.studentInput,
+      expectedAnswer: '10 m/s',
+      expectedUnit: 'm/s',
+      expectedQuantity: 'final velocity',
+      target: 'velocity',
+      topic: 'Kinematics',
+      problemText: 'An object starts at 2 m/s and accelerates at 4 m/s² for 2 seconds.',
+      problemId: request.problemId,
+      stepId: request.stepId,
+    });
+    const learningSignal = learningSignalFromInstance(diagnostic.primarySignal);
+    appendDiagnosticSignals(diagnostic.signals);
+
+    return withMockResult({
+      stepStatus: diagnostic.signals.length ? 'needsAttention' : 'complete',
+      supportiveFeedback: diagnostic.supportiveFeedback,
+      explanation: diagnostic.whyItMatters ?? 'Acceleration times time leaves m/s, so the result describes velocity.',
+      whatWentWell: diagnostic.whatWentWell,
+      whatToAdjust: diagnostic.whatToAdjust,
+      whyItMatters: diagnostic.whyItMatters,
       suggestedNextStep: 'Rewrite the final answer with m/s and explain what it represents.',
-      learningSignal: mockLearningSignal,
-    }),
+      suggestedNextAction: diagnostic.suggestedVisualTemplate ? 'Open the visual support.' : undefined,
+      learningSignal,
+      primarySignal: diagnostic.primarySignal,
+      signals: diagnostic.signals,
+      diagnostic,
+    });
+  },
 
   selectVisualTemplate: (
     _request: VisualLabTemplateRequest,
@@ -343,22 +351,36 @@ export const mockPicolabApi = {
 
   checkPracticeAnswer: (
     request: PracticeAnswerRequest,
-  ): Promise<ApiResult<PracticeAnswerResponse>> =>
-    withMockResult({
-      status:
-        request.selectedOptionId === focusMission.question.correctOptionId ? 'complete' : 'needsAttention',
-      supportiveFeedback:
-        request.selectedOptionId === focusMission.question.correctOptionId
-          ? focusMission.question.feedbackCorrect
-          : focusMission.question.feedbackUsefulSignal,
-      explanation: 'Unit cancellation turns m/s² · s into m/s.',
-      earnedPicoPoints: request.selectedOptionId === focusMission.question.correctOptionId ? 25 : 0,
-      picoPointsPreview: request.selectedOptionId === focusMission.question.correctOptionId ? 25 : 0,
-      learningSignal:
-        request.selectedOptionId === focusMission.question.correctOptionId
-          ? undefined
-          : practiceUnitSignal,
-    }),
+  ): Promise<ApiResult<PracticeAnswerResponse>> => {
+    const isCorrect = request.selectedOptionId === focusMission.question.correctOptionId;
+    const diagnostic = isCorrect
+      ? undefined
+      : runMockDiagnostic({
+          source: 'practice',
+          studentAnswer: request.answer,
+          expectedAnswer: 'm/s',
+          expectedUnit: 'm/s',
+          expectedQuantity: 'velocity',
+          problemText:
+            'If acceleration is measured in m/s² and time is measured in s, what unit should a · t have?',
+          missionId: request.missionId,
+        });
+    appendDiagnosticSignals(diagnostic?.signals ?? []);
+
+    return withMockResult({
+      status: isCorrect ? 'complete' : 'needsAttention',
+      supportiveFeedback: isCorrect
+        ? focusMission.question.feedbackCorrect
+        : diagnostic?.supportiveFeedback ?? focusMission.question.feedbackUsefulSignal,
+      explanation: diagnostic?.whyItMatters ?? 'Unit cancellation turns m/s² · s into m/s.',
+      earnedPicoPoints: isCorrect ? 25 : 0,
+      picoPointsPreview: isCorrect ? 25 : 0,
+      learningSignal: learningSignalFromInstance(diagnostic?.primarySignal),
+      primarySignal: diagnostic?.primarySignal,
+      signals: diagnostic?.signals ?? [],
+      diagnostic,
+    });
+  },
 
   completePracticeMission: (
     _request: PracticeCompleteRequest,
