@@ -39,6 +39,8 @@ Each definition includes:
 
 Runtime instances add severity, status, confidence, evidence, source, timestamp, and optional problem/step references.
 
+Current demo persistence stores generated instances locally so Smart Notebook, Practice Missions, Growth Map, Growth Path, Profile, and Visual Lab can share the same signal context without auth or a database.
+
 ## Product Mapping
 
 Smart Notebook:
@@ -47,8 +49,10 @@ The notebook should attach one or more signal instances to a step check. For exa
 Visual Lab:
 Definitions can include `suggestedVisualTemplate`. For example, unit signals map to `units`, rate and graph signals map to `graph`, and direction or quantity signals can map to `motion`.
 
+The active Visual Lab demo templates are `motion`, `units`, `graph`, `formula`, `free-body`, and `function`.
+
 Practice Missions:
-Practice can use a signal ID to choose a mission family. `units.unit_cancellation` can recommend Unit cancellation ladder or Dimensional check. Later phases can generate mock missions from these fields.
+Practice can use a signal ID to choose a mission family. `units.unit_cancellation` can recommend Unit cancellation ladder or Dimensional check. The current mock backend and local fallback can return diagnostic fields from answer checks.
 
 Growth Map:
 Growth Map should remain diagnostic. It can group repeated instances by category, show signal strength, and avoid roadmap language except for light next actions.
@@ -84,13 +88,14 @@ The deterministic prioritization rule for now is:
 
 This is intentionally simple. It is not a diagnostic model.
 
-## Future Diagnostic Engine Plan
+## Diagnostic Engine Status
 
-Later mock diagnostic phases can:
+Completed demo behavior:
 
-1. Convert notebook and practice evidence into `LearningSignalInstance` records.
-2. Allow mixed signals per step.
-3. Aggregate instances into Growth Map category summaries.
-4. Select Growth Path focus areas from repeated high-confidence signals.
-5. Route to Practice Missions and Visual Lab using `suggestedPractice` and `suggestedVisualTemplate`.
-6. Keep student-facing feedback supportive even when internal evidence comes from a mismatch.
+1. Notebook and practice evidence can become `LearningSignalInstance` records.
+2. Mixed signals are supported by the deterministic mock engine.
+3. Growth Map, Growth Path, and Profile can consume locally persisted signals.
+4. Practice Missions and Visual Lab can use `suggestedPractice` and `suggestedVisualTemplate`.
+5. Student-facing feedback stays supportive even when internal evidence comes from a mismatch.
+
+Future diagnostic work can add richer evidence extraction, persistent user history, and real AI-assisted classification behind the same taxonomy contract.

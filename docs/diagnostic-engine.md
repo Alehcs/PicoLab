@@ -1,6 +1,6 @@
 # Mock Diagnostic Engine
 
-The mock diagnostic engine turns structured evidence into one or more `LearningSignalInstance` records. It is deterministic and uses the Phase 11G taxonomy. It exists to make Smart Notebook, Practice Missions, Growth Map, and future diagnostic flows speak the same learning-science language before any real AI integration.
+The mock diagnostic engine turns structured evidence into one or more `LearningSignalInstance` records. It is deterministic and uses the Phase 11G taxonomy. It makes Smart Notebook, Practice Missions, Growth Map, Growth Path, Profile, and Visual Lab suggestions speak the same learning-science language before any real AI integration.
 
 ## What It Does
 
@@ -10,11 +10,13 @@ The mock diagnostic engine turns structured evidence into one or more `LearningS
 - Prioritizes signals using the shared `prioritizeSignals` rule.
 - Generates supportive feedback from the primary signal.
 - Keeps existing API/UI compatibility fields such as `supportiveFeedback`, `learningSignal`, `whatWentWell`, `whatToAdjust`, and `whyItMatters`.
+- Provides suggested Visual Lab template context when a signal definition includes one.
 
 ## What It Does Not Do Yet
 
 - It does not call a real AI model.
 - It does not store server-side history.
+- It does not require the backend to be online because connected frontend flows keep local fallback behavior.
 - It does not infer from arbitrary natural language deeply.
 - It does not replace teacher judgment or learner review.
 - It does not personalize with auth, accounts, or a database.
@@ -69,7 +71,7 @@ Future AI can replace or augment the heuristic rules by:
 4. Letting deterministic validation keep IDs, tone, and schema safe.
 5. Persisting signal instances once auth/database phases exist.
 
-The current engine is deliberately small so later AI can plug into the same evidence/result contract.
+The current engine is deliberately small so later AI can plug into the same evidence/result contract. In the demo, it powers backend mock responses and local fallback behavior.
 
 ## Safety And Tone
 

@@ -1,6 +1,6 @@
 # Backend Local Development
 
-Phase 11B adds a mock-only PicoLab API server. It does not call real AI providers, does not require API keys, and the frontend pages are not connected to it yet.
+PicoLab includes a mock-only API server for local demo and contract testing. It does not call real AI providers, does not require API keys, and does not use auth or a database.
 
 ## Install
 
@@ -14,9 +14,10 @@ The backend uses the root `package.json` and lockfile.
 
 ## Environment
 
-Copy the backend example env if you want to override defaults:
+Copy the root or backend example env if you want to override defaults:
 
 ```sh
+cp .env.example .env
 cp server/.env.example server/.env
 ```
 
@@ -29,7 +30,7 @@ CLIENT_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
 PICOLAB_API_MODE=mock
 ```
 
-No secrets are needed for Phase 11B.
+No secrets are needed for the demo.
 
 ## Run
 
@@ -105,12 +106,12 @@ curl -X POST http://127.0.0.1:8787/api/problems/parse \
 
 ## Frontend Impact
 
-The frontend remains mock-first. `src/services/picolabApi.ts` still points at the local mock service and no page depends on the backend yet.
+Connected frontend flows call backend endpoints first and fall back to local mock services if the backend is unavailable.
 
-For Phase 11C, `src/services/apiClient.ts` can target the backend with:
+`src/services/apiClient.ts` targets the backend with:
 
 ```env
 VITE_PICOLAB_API_URL=http://127.0.0.1:8787/api
 ```
 
-This is optional until a flow is intentionally connected.
+Backend-first fallback currently covers Ask Pico, problem parse/scan/confirm, Smart Notebook step checking, Practice Missions, Growth Map, Growth Path, Profile, and Visual Lab suggestions.
