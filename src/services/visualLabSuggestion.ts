@@ -42,6 +42,17 @@ const templateLabels: Record<VisualTemplateId, string> = {
   circuit: 'Circuit',
 };
 
+const templateDescriptions: Record<VisualTemplateId, string> = {
+  motion: 'Motion meaning',
+  graph: 'Graph interpretation',
+  units: 'Unit reasoning',
+  formula: 'Formula selection',
+  'free-body': 'Force and direction',
+  function: 'Function structure',
+  energy: 'Energy relationship',
+  circuit: 'Circuit relationship',
+};
+
 const supportedCategories: LearningSignalCategory[] = [
   'algebra',
   'units',
@@ -78,6 +89,19 @@ const normalizeTemplateId = (template?: string): VisualTemplateId | undefined =>
   return supportedTemplates.includes(normalized as VisualTemplateId)
     ? (normalized as VisualTemplateId)
     : undefined;
+};
+
+export const isVisualTemplateId = (template?: string): template is VisualTemplateId =>
+  Boolean(normalizeTemplateId(template));
+
+export const getTemplateLabel = (template?: string) => {
+  const templateId = normalizeTemplateId(template);
+  return templateId ? templateLabels[templateId] : 'Motion';
+};
+
+export const getTemplateDescription = (template?: string) => {
+  const templateId = normalizeTemplateId(template);
+  return templateId ? templateDescriptions[templateId] : 'Motion meaning';
 };
 
 export const getVisualTemplateForDiagnosticSignal = (
@@ -142,7 +166,7 @@ export const storeVisualLabSuggestionFromSignals = (signals?: SignalLike[] | nul
   return suggestion;
 };
 
-export const readVisualLabSuggestion = (): VisualLabSuggestedTemplate | null => {
+export const loadVisualLabSuggestion = (): VisualLabSuggestedTemplate | null => {
   if (!canUseSessionStorage()) return null;
 
   try {
@@ -167,6 +191,8 @@ export const readVisualLabSuggestion = (): VisualLabSuggestedTemplate | null => 
     return null;
   }
 };
+
+export const readVisualLabSuggestion = loadVisualLabSuggestion;
 
 export const clearVisualLabSuggestion = () => {
   if (!canUseSessionStorage()) return;
