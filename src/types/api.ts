@@ -178,6 +178,8 @@ export type GrowthMapResponse = {
   picoInsight: string;
 };
 
+export type GrowthSignalRequest = LearningSignal;
+
 export type GrowthPathStep = {
   id: string;
   title: string;
@@ -193,6 +195,10 @@ export type GrowthPathResponse = {
   recommendedFocus: string;
   steps: GrowthPathStep[];
   picoPlan: string;
+};
+
+export type GrowthPathRegenerateRequest = {
+  goal: string;
 };
 
 export type PracticeMission = {
@@ -295,6 +301,7 @@ export type ProfileResponse = {
   league: string;
   picoPoints: number;
   streakDays: number;
+  goals?: string[];
   badges: Array<{
     id: string;
     name: string;
@@ -305,6 +312,10 @@ export type ProfileResponse = {
     label: string;
     detail: string;
   }>;
+};
+
+export type ProfileGoalsRequest = {
+  goals: string[];
 };
 
 export type SettingsResponse = {

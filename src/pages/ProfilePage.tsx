@@ -1,5 +1,5 @@
 import { MessageCircle, Route, Signal, Sparkles, Target } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { ActivityItem } from '../components/profile/ActivityItem';
@@ -29,6 +29,19 @@ import {
   picoQuotes,
   profileProgressSummary,
 } from '../data/mockProfile';
+import {
+  mergeAchievementsWithLocalProfile,
+  mergeLeagueWithLocalProfile,
+  mergeProfileStatsWithLocalProgress,
+  mergeProfileWithLocalProgress,
+} from '../services/learningProgress';
+import { picolabApi } from '../services/picolabApi';
+import type { ProfileResponse } from '../types/api';
+import type {
+  Achievement,
+  ActivityItem as ProfileActivityItem,
+  ProfileProgressSummary,
+} from '../types/profile';
 
 type ProfileTab = 'subjects' | 'progress' | 'achievements' | 'history' | 'quote';
 
@@ -40,15 +53,147 @@ const profileTabs: TabItem<ProfileTab>[] = [
   { label: 'Pico Quote', value: 'quote' },
 ];
 
+const localProfile: ProfileResponse = {
+  learnerName: learnerProfile.name,
+  league: leagueProgress.currentLeague,
+  picoPoints: leagueProgress.points,
+  streakDays: 5,
+  goals: learningGoals,
+  badges: mockAchievements.map((achievement) => ({
+    id: achievement.id,
+    name: achievement.name,
+    unlocked: achievement.unlocked,
+  })),
+  recentActivity: mockActivity.map((activity) => ({
+    id: activity.id,
+    label: activity.label,
+    detail: activity.detail,
+  })),
+};
+
+const activityVisuals = (activity: ProfileResponse['recentActivity'][number]): ProfileActivityItem => {
+  if (activity.label.includes('Mission')) {
+    return { ...activity, icon: 'target', variant: 'green' };
+  }
+  if (activity.label.includes('signal')) {
+    return { ...activity, icon: 'signal', variant: 'blue' };
+  }
+  if (activity.label.includes('Visual')) {
+    return { ...activity, icon: 'flask', variant: 'purple' };
+  }
+  if (activity.label.includes('Daily')) {
+    return { ...activity, icon: 'sparkle', variant: 'orange' };
+  }
+
+  return { ...activity, icon: 'route', variant: 'coral' };
+};
+
 export function ProfilePage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<ProfileTab>('subjects');
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [goalsTouched, setGoalsTouched] = useState(false);
   const [askPicoOpen, setAskPicoOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(() => mergeProfileWithLocalProgress(localProfile));
 
-  const unlockedAchievements = mockAchievements.filter((achievement) => achievement.unlocked);
-  const upcomingAchievements = mockAchievements.filter((achievement) => !achievement.unlocked);
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProfile = async () => {
+      setLoading(true);
+
+      try {
+        const result = await picolabApi.getProfile();
+
+        if (isMounted && result.ok) {
+          setProfile(mergeProfileWithLocalProgress(result.data));
+        }
+      } catch {
+        if (import.meta.env?.DEV) {
+          console.warn('Profile backend unavailable; using local fallback.');
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const learner = useMemo(
+    () => ({
+      ...learnerProfile,
+      name: profile.learnerName,
+      initials: profile.learnerName.slice(0, 1).toUpperCase() || learnerProfile.initials,
+      league: profile.league,
+    }),
+    [profile.learnerName, profile.league],
+  );
+  const profileStats = useMemo(() => {
+    const mergedStats = mergeProfileStatsWithLocalProgress(mockProfileStats);
+    const unlockedBadgeCount = profile.badges.filter((badge) => badge.unlocked).length;
+    const improvedSignalsCount = profile.recentActivity.filter((activity) =>
+      activity.label.includes('signal'),
+    ).length;
+
+    return mergedStats.map((stat) => {
+      if (stat.label === 'day streak') return { ...stat, value: String(profile.streakDays) };
+      if (stat.label === 'PicoPoints') return { ...stat, value: String(profile.picoPoints) };
+      if (stat.label === 'badges') return { ...stat, value: String(unlockedBadgeCount) };
+      if (stat.label === 'signals improved') {
+        return { ...stat, value: String(Math.max(Number(stat.value), improvedSignalsCount)) };
+      }
+
+      return stat;
+    });
+  }, [profile]);
+  const syncedLeagueProgress = useMemo(
+    () => mergeLeagueWithLocalProfile(leagueProgress, profile),
+    [profile],
+  );
+  const syncedAchievements = useMemo(
+    () => mergeAchievementsWithLocalProfile(mockAchievements, profile),
+    [profile],
+  );
+  const syncedActivity = useMemo(
+    () => profile.recentActivity.map(activityVisuals),
+    [profile.recentActivity],
+  );
+  const syncedProgressSummary: ProfileProgressSummary = {
+    ...profileProgressSummary,
+    dailyChallengeStreak: `${profile.streakDays} days`,
+    learningSignalsImproved: String(
+      Math.max(
+        Number(profileProgressSummary.learningSignalsImproved),
+        syncedActivity.filter((activity) => activity.label.includes('signal')).length,
+      ),
+    ),
+  };
+  const profileGoals = profile.goals?.length ? profile.goals : learningGoals;
+
+  const unlockedAchievements = syncedAchievements.filter((achievement) => achievement.unlocked);
+  const upcomingAchievements = syncedAchievements.filter((achievement) => !achievement.unlocked);
+
+  const updateGoals = async () => {
+    setGoalsTouched(true);
+
+    try {
+      const result = await picolabApi.updateProfileGoals({ goals: profileGoals });
+
+      if (result.ok) {
+        setProfile(mergeProfileWithLocalProgress(result.data));
+      }
+    } catch {
+      if (import.meta.env?.DEV) {
+        console.warn('Profile goals backend unavailable; keeping local goals.');
+      }
+    }
+  };
 
   const renderTab = () => {
     if (tab === 'subjects') {
@@ -71,17 +216,17 @@ export function ProfilePage() {
                 <span className="p-section-lbl text-[#2770C2]">Current path</span>
               </div>
               <div className="text-[14px] font-extrabold tracking-[-0.02em] text-pico-text">
-                {profileProgressSummary.currentPath}
+              {syncedProgressSummary.currentPath}
               </div>
               <div className="mt-2">
                 <ProgressBar
-                  value={profileProgressSummary.pathProgress}
+                  value={syncedProgressSummary.pathProgress}
                   color="var(--pico-blue)"
                   label="Path progress"
                 />
               </div>
               <div className="mt-1.5 text-[11.5px] text-pico-secondary">
-                {profileProgressSummary.pathProgress}% complete
+                {syncedProgressSummary.pathProgress}% complete
               </div>
             </Card>
 
@@ -91,7 +236,7 @@ export function ProfilePage() {
                 <span className="p-section-lbl text-[#2A7850]">Strongest skill</span>
               </div>
               <div className="text-[14px] font-extrabold tracking-[-0.02em] text-pico-text">
-                {profileProgressSummary.strongestSkill}
+                {syncedProgressSummary.strongestSkill}
               </div>
               <div className="mt-1 text-[11.5px] text-pico-secondary">
                 Consistent across sessions
@@ -104,7 +249,7 @@ export function ProfilePage() {
                 <span className="p-section-lbl text-[#886018]">Focus area</span>
               </div>
               <div className="text-[14px] font-extrabold tracking-[-0.02em] text-pico-text">
-                {profileProgressSummary.focusArea}
+                {syncedProgressSummary.focusArea}
               </div>
               <div className="mt-1 text-[11.5px] text-pico-secondary">
                 Improving across missions
@@ -115,13 +260,13 @@ export function ProfilePage() {
           <div className="flex flex-wrap gap-2.5">
             <div className="flex items-center gap-2.5 rounded-[11px] bg-pico-softCoral px-4 py-2">
               <span className="text-[17px] font-extrabold text-[#BF3A3A]">
-                {profileProgressSummary.dailyChallengeStreak}
+                {syncedProgressSummary.dailyChallengeStreak}
               </span>
               <span className="text-[12.5px] text-[#BF3A3A]/80">daily challenge streak</span>
             </div>
             <div className="flex items-center gap-2.5 rounded-[11px] bg-pico-softGreen px-4 py-2">
               <span className="text-[17px] font-extrabold text-[#2A7850]">
-                {profileProgressSummary.learningSignalsImproved}
+                {syncedProgressSummary.learningSignalsImproved}
               </span>
               <span className="text-[12.5px] text-[#2A7850]/80">learning signals improved</span>
             </div>
@@ -131,7 +276,7 @@ export function ProfilePage() {
             <PicoMascot size={36} />
             <div className="min-w-0 flex-1">
               <p className="text-[13.5px] italic leading-relaxed text-pico-text">
-                {profileProgressSummary.picoInsight}
+                {syncedProgressSummary.picoInsight}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => navigate('/growth-path')}>
@@ -183,11 +328,11 @@ export function ProfilePage() {
     if (tab === 'history') {
       return (
         <div>
-          {mockActivity.map((activity, index) => (
+          {syncedActivity.map((activity, index) => (
             <ActivityItem
               key={activity.id}
               activity={activity}
-              isLast={index === mockActivity.length - 1}
+              isLast={index === syncedActivity.length - 1}
             />
           ))}
         </div>
@@ -222,15 +367,23 @@ export function ProfilePage() {
       />
 
       <div className="flex max-w-[900px] flex-col gap-3.5">
-        <ProfileSummaryCard learner={learnerProfile} stats={mockProfileStats} />
+        {loading ? (
+          <Card variant="blue" className="px-4 py-3">
+            <span className="text-[13px] font-bold text-[#2A60A8]">
+              Pico is syncing your profile...
+            </span>
+          </Card>
+        ) : null}
+
+        <ProfileSummaryCard learner={learner} stats={profileStats} />
 
         <div className="grid gap-3.5 lg:grid-cols-2">
-          <LeagueProgressCard league={leagueProgress} />
-          <LearningGoalsCard goals={learningGoals} onEditGoals={() => setGoalsTouched(true)} />
+          <LeagueProgressCard league={syncedLeagueProgress} />
+          <LearningGoalsCard goals={profileGoals} onEditGoals={updateGoals} />
         </div>
 
         {goalsTouched ? (
-          <PicoNote>Goal editing is mocked for this migration. Your current goals stay visible.</PicoNote>
+          <PicoNote>Goals are synced lightly for this migration. Your current goals stay visible.</PicoNote>
         ) : null}
 
         <Card className="overflow-hidden">
@@ -245,8 +398,8 @@ export function ProfilePage() {
         </Card>
 
         <div className="flex flex-wrap gap-2 pt-1">
-          <Badge variant="blue">Current league: {learnerProfile.league}</Badge>
-          <Badge variant="yellow">{leagueProgress.points} PicoPoints</Badge>
+          <Badge variant="blue">Current league: {learner.league}</Badge>
+          <Badge variant="yellow">{profile.picoPoints} PicoPoints</Badge>
           <Badge variant="green">{unlockedAchievements.length} badges unlocked</Badge>
         </div>
       </div>

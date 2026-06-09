@@ -26,6 +26,8 @@ import type {
   AskPicoResponse,
   GrowthMapResponse,
   GrowthPathResponse,
+  GrowthPathRegenerateRequest,
+  GrowthSignalRequest,
   LearningSignal,
   NotebookResponse,
   ParsedProblem,
@@ -34,6 +36,8 @@ import type {
   PracticeCompleteRequest,
   PracticeCompleteResponse,
   PracticeMission,
+  ProfileGoalsRequest,
+  ProfileResponse,
   ProblemEntity,
   ProblemInput,
   ProblemScanInput,
@@ -158,6 +162,22 @@ const missionFromRandom = (): PracticeMission[] =>
     rewardPicoPoints: mission.reward.points,
   }));
 
+const learningSignalFromGrowthSignal = (
+  signal: (typeof growthLearningSignals)[number],
+): LearningSignal => ({
+  id: signal.id,
+  kind:
+    signal.id === 'sign-slips'
+      ? 'signSlip'
+      : signal.id === 'quantity-confusion'
+        ? 'quantityConfusion'
+        : 'unitMismatch',
+  title: signal.title,
+  description: signal.description,
+  strength: signal.strength,
+  suggestedFocus: signal.bestNextAction.label,
+});
+
 export const mockPicolabApi = {
   parseProblem: (_input: ProblemInput) => withMockResult(parsedProblem),
 
@@ -224,25 +244,48 @@ export const mockPicolabApi = {
       mainFocus: growthMapSummaryCards[0].title,
       strongestSkill: growthMapSummaryCards[1].title,
       nextOpportunity: growthMapSummaryCards[2].title,
-      learningSignals: growthLearningSignals.map((signal) => ({
-        id: signal.id,
-        kind:
-          signal.id === 'sign-slips'
-            ? 'signSlip'
-            : signal.id === 'quantity-confusion'
-              ? 'quantityConfusion'
-              : 'unitMismatch',
-        title: signal.title,
-        description: signal.description,
-        strength: signal.strength,
-        suggestedFocus: signal.bestNextAction.label,
-      })),
+      learningSignals: growthLearningSignals.map(learningSignalFromGrowthSignal),
+      picoInsight: growthMapPicoInsight,
+    }),
+
+  addGrowthSignal: (signal: GrowthSignalRequest): Promise<ApiResult<GrowthMapResponse>> =>
+    withMockResult({
+      mainFocus: signal.suggestedFocus,
+      strongestSkill: growthMapSummaryCards[1].title,
+      nextOpportunity: growthMapSummaryCards[2].title,
+      learningSignals: [
+        signal,
+        ...growthLearningSignals.map(learningSignalFromGrowthSignal),
+      ],
       picoInsight: growthMapPicoInsight,
     }),
 
   getGrowthPath: (): Promise<ApiResult<GrowthPathResponse>> =>
     withMockResult({
       currentGoal: currentGrowthGoal.value,
+      progressPercent: growthPathProgress.percent,
+      recommendedFocus: recommendedGrowthStep.skill,
+      steps: growthPathSteps.map((step) => ({
+        id: step.id,
+        title: step.title,
+        status:
+          step.status === 'up-next'
+            ? 'upNext'
+            : step.status === 'recommended'
+              ? 'recommended'
+              : 'later',
+        reason: step.reason,
+        items: step.items,
+        route: step.route,
+      })),
+      picoPlan: growthPathPicoPlan,
+    }),
+
+  regenerateGrowthPath: (
+    request: GrowthPathRegenerateRequest,
+  ): Promise<ApiResult<GrowthPathResponse>> =>
+    withMockResult({
+      currentGoal: request.goal || currentGrowthGoal.value,
       progressPercent: growthPathProgress.percent,
       recommendedFocus: recommendedGrowthStep.skill,
       steps: growthPathSteps.map((step) => ({
@@ -326,12 +369,32 @@ export const mockPicolabApi = {
     });
   },
 
-  getProfile: () =>
+  getProfile: (): Promise<ApiResult<ProfileResponse>> =>
     withMockResult({
       learnerName: learnerProfile.name,
       league: leagueProgress.currentLeague,
       picoPoints: leagueProgress.points,
       streakDays: 5,
+      goals: ['Improve kinematics', 'Strengthen algebra steps', 'Prepare for calculus'],
+      badges: mockAchievements.map((achievement) => ({
+        id: achievement.id,
+        name: achievement.name,
+        unlocked: achievement.unlocked,
+      })),
+      recentActivity: mockActivity.map((activity) => ({
+        id: activity.id,
+        label: activity.label,
+        detail: activity.detail,
+      })),
+    }),
+
+  updateProfileGoals: (request: ProfileGoalsRequest): Promise<ApiResult<ProfileResponse>> =>
+    withMockResult({
+      learnerName: learnerProfile.name,
+      league: leagueProgress.currentLeague,
+      picoPoints: leagueProgress.points,
+      streakDays: 5,
+      goals: request.goals,
       badges: mockAchievements.map((achievement) => ({
         id: achievement.id,
         name: achievement.name,

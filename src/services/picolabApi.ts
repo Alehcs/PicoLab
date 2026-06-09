@@ -6,6 +6,10 @@ import type {
   AskPicoResponse,
   ExtractedDetail,
   ExtractedDetailKind,
+  GrowthMapResponse,
+  GrowthPathRegenerateRequest,
+  GrowthPathResponse,
+  GrowthSignalRequest,
   LearningSignal,
   LearningSignalKind,
   ParsedProblem,
@@ -14,6 +18,8 @@ import type {
   PracticeCompleteRequest,
   PracticeCompleteResponse,
   PracticeMission,
+  ProfileGoalsRequest,
+  ProfileResponse,
   ProblemEntity,
   ProblemInput,
   ProblemScanInput,
@@ -26,6 +32,8 @@ const activeApi = mockPicolabApi;
 const ASK_PICO_TIMEOUT_MS = 4000;
 const CORE_FLOW_TIMEOUT_MS = 4000;
 const PRACTICE_TIMEOUT_MS = 4000;
+const GROWTH_TIMEOUT_MS = 4000;
+const PROFILE_TIMEOUT_MS = 4000;
 
 type BackendAskPicoEnvelope = {
   ok?: boolean;
@@ -192,6 +200,51 @@ type BackendPracticeCompleteEnvelope = {
     updatedLeagueProgress?: unknown;
     unlockedBadges?: unknown;
     improvedSignals?: unknown;
+  };
+};
+
+type BackendGrowthMapEnvelope = {
+  ok?: boolean;
+  data?: {
+    mainFocus?: unknown;
+    strongestSkill?: unknown;
+    nextOpportunity?: unknown;
+    learningSignals?: unknown;
+    strengths?: unknown;
+    focusAreas?: unknown;
+    suggestedDirection?: unknown;
+    improvementTrend?: unknown;
+    picoInsight?: unknown;
+  };
+};
+
+type BackendGrowthPathEnvelope = {
+  ok?: boolean;
+  data?: {
+    currentGoal?: unknown;
+    progressPercent?: unknown;
+    progress?: unknown;
+    recommendedFocus?: unknown;
+    recommendedStep?: unknown;
+    steps?: unknown;
+    nextSteps?: unknown;
+    laterSteps?: unknown;
+    picoPlan?: unknown;
+  };
+};
+
+type BackendProfileEnvelope = {
+  ok?: boolean;
+  data?: {
+    learnerName?: unknown;
+    learner?: unknown;
+    league?: unknown;
+    picoPoints?: unknown;
+    streakDays?: unknown;
+    streak?: unknown;
+    badges?: unknown;
+    goals?: unknown;
+    recentActivity?: unknown;
   };
 };
 
@@ -386,6 +439,183 @@ const normalizePracticeComplete = (
     updatedLeagueProgress,
     unlockedBadges,
     improvedSignals,
+  };
+};
+
+const normalizeGrowthMap = (payload: BackendGrowthMapEnvelope): GrowthMapResponse | null => {
+  if (!payload.ok || !payload.data) return null;
+
+  const { data } = payload;
+  const focusAreas = Array.isArray(data.focusAreas)
+    ? data.focusAreas.filter((area): area is string => typeof area === 'string')
+    : [];
+  const strengths = Array.isArray(data.strengths)
+    ? data.strengths.filter((strength): strength is string => typeof strength === 'string')
+    : [];
+  const learningSignals = Array.isArray(data.learningSignals)
+    ? data.learningSignals
+        .map(normalizeLearningSignal)
+        .filter((signal): signal is LearningSignal => Boolean(signal))
+    : [];
+
+  const mainFocus =
+    typeof data.mainFocus === 'string'
+      ? data.mainFocus
+      : focusAreas[0] ?? learningSignals[0]?.suggestedFocus ?? '';
+  const strongestSkill =
+    typeof data.strongestSkill === 'string' ? data.strongestSkill : strengths[0] ?? 'Formula setup';
+  const nextOpportunity =
+    typeof data.nextOpportunity === 'string'
+      ? data.nextOpportunity
+      : focusAreas[1] ?? learningSignals[1]?.suggestedFocus ?? mainFocus;
+  const picoInsight =
+    typeof data.picoInsight === 'string'
+      ? data.picoInsight
+      : typeof data.improvementTrend === 'string'
+        ? data.improvementTrend
+        : 'Pico is reviewing recent learning signals and practice progress.';
+
+  if (!mainFocus || !learningSignals.length) return null;
+
+  return {
+    mainFocus,
+    strongestSkill,
+    nextOpportunity,
+    learningSignals,
+    picoInsight,
+  };
+};
+
+const normalizeGrowthPathStep = (
+  value: unknown,
+  index: number,
+  status: 'recommended' | 'upNext' | 'later',
+): GrowthPathResponse['steps'][number] | null => {
+  if (!isRecord(value)) return null;
+
+  const title = typeof value.title === 'string' ? value.title : '';
+  if (!title) return null;
+
+  return {
+    id: typeof value.id === 'string' ? value.id : `growth-step-${index + 1}`,
+    title,
+    status:
+      value.status === 'recommended' || value.status === 'upNext' || value.status === 'later'
+        ? value.status
+        : status,
+    reason:
+      typeof value.reason === 'string'
+        ? value.reason
+        : status === 'recommended'
+          ? 'This is the clearest next step from recent learning signals.'
+          : 'This supports your current learning path.',
+    items: Array.isArray(value.items)
+      ? value.items.filter((item): item is string => typeof item === 'string')
+      : [title],
+    route: typeof value.route === 'string' ? value.route : undefined,
+  };
+};
+
+const normalizeGrowthPath = (payload: BackendGrowthPathEnvelope): GrowthPathResponse | null => {
+  if (!payload.ok || !payload.data) return null;
+
+  const { data } = payload;
+  const progress = isRecord(data.progress) ? data.progress : undefined;
+  const recommendedStep = isRecord(data.recommendedStep) ? data.recommendedStep : undefined;
+  const rawSteps = Array.isArray(data.steps)
+    ? data.steps.map((step, index) => normalizeGrowthPathStep(step, index, 'later'))
+    : [
+        normalizeGrowthPathStep(recommendedStep, 0, 'recommended'),
+        ...(Array.isArray(data.nextSteps)
+          ? data.nextSteps.map((step, index) => normalizeGrowthPathStep(step, index + 1, 'upNext'))
+          : []),
+        ...(Array.isArray(data.laterSteps)
+          ? data.laterSteps.map((step, index) => normalizeGrowthPathStep(step, index + 10, 'later'))
+          : []),
+      ];
+  const steps = rawSteps.filter((step): step is GrowthPathResponse['steps'][number] =>
+    Boolean(step),
+  );
+  const recommendedFocus =
+    typeof data.recommendedFocus === 'string'
+      ? data.recommendedFocus
+      : typeof recommendedStep?.title === 'string'
+        ? recommendedStep.title
+        : steps[0]?.title ?? '';
+
+  if (!steps.length || !recommendedFocus) return null;
+
+  return {
+    currentGoal:
+      typeof data.currentGoal === 'string' ? data.currentGoal : 'Improve kinematics fundamentals',
+    progressPercent:
+      typeof data.progressPercent === 'number'
+        ? data.progressPercent
+        : typeof progress?.percent === 'number'
+          ? progress.percent
+          : 0,
+    recommendedFocus,
+    steps,
+    picoPlan:
+      typeof data.picoPlan === 'string'
+        ? data.picoPlan
+        : typeof recommendedStep?.reason === 'string'
+          ? recommendedStep.reason
+          : 'Pico will keep the roadmap focused on the clearest next step.',
+  };
+};
+
+const normalizeProfile = (payload: BackendProfileEnvelope): ProfileResponse | null => {
+  if (!payload.ok || !payload.data) return null;
+
+  const { data } = payload;
+  const learner = isRecord(data.learner) ? data.learner : undefined;
+  const league = isRecord(data.league) ? data.league : data.league;
+  const streak = isRecord(data.streak) ? data.streak : undefined;
+  const learnerName =
+    typeof data.learnerName === 'string'
+      ? data.learnerName
+      : typeof learner?.name === 'string'
+        ? learner.name
+        : '';
+
+  if (!learnerName) return null;
+
+  const badges = Array.isArray(data.badges)
+    ? data.badges.filter(isRecord).map((badge, index) => ({
+        id: typeof badge.id === 'string' ? badge.id : `badge-${index + 1}`,
+        name: typeof badge.name === 'string' ? badge.name : 'Practice Badge',
+        unlocked: badge.unlocked !== false,
+      }))
+    : [];
+  const recentActivity = Array.isArray(data.recentActivity)
+    ? data.recentActivity.filter(isRecord).map((activity, index) => ({
+        id: typeof activity.id === 'string' ? activity.id : `activity-${index + 1}`,
+        label: typeof activity.label === 'string' ? activity.label : 'Learning activity',
+        detail: typeof activity.detail === 'string' ? activity.detail : 'PicoLab progress',
+      }))
+    : [];
+
+  return {
+    learnerName,
+    league:
+      typeof league === 'string'
+        ? league
+        : isRecord(league) && typeof league.current === 'string'
+          ? league.current
+          : 'Feather League',
+    picoPoints: typeof data.picoPoints === 'number' ? data.picoPoints : 0,
+    streakDays:
+      typeof data.streakDays === 'number'
+        ? data.streakDays
+        : typeof streak?.days === 'number'
+          ? streak.days
+          : 0,
+    goals: Array.isArray(data.goals)
+      ? data.goals.filter((goal): goal is string => typeof goal === 'string')
+      : undefined,
+    badges,
+    recentActivity,
   };
 };
 
@@ -686,6 +916,124 @@ const completePracticeMissionWithFallback = async (
   );
 };
 
+const getGrowthMapWithFallback = async (): Promise<ApiResult<GrowthMapResponse>> => {
+  const backendResult = await apiClient.get<BackendGrowthMapEnvelope>('/growth-map', {
+    timeoutMs: GROWTH_TIMEOUT_MS,
+  });
+
+  if (backendResult.ok) {
+    const growthMap = normalizeGrowthMap(backendResult.data);
+
+    if (growthMap) {
+      return { ok: true, source: 'backend', data: growthMap };
+    }
+  }
+
+  return fallbackWithWarning('Growth Map', backendResult, activeApi.getGrowthMap());
+};
+
+const addGrowthSignalWithFallback = async (
+  signal: GrowthSignalRequest,
+): Promise<ApiResult<GrowthMapResponse>> => {
+  const backendResult = await apiClient.post<BackendGrowthMapEnvelope>(
+    '/growth-map/signals',
+    signal,
+    {
+      timeoutMs: GROWTH_TIMEOUT_MS,
+    },
+  );
+
+  if (backendResult.ok) {
+    const growthMap = normalizeGrowthMap(backendResult.data);
+
+    if (growthMap) {
+      return { ok: true, source: 'backend', data: growthMap };
+    }
+  }
+
+  return fallbackWithWarning('Growth signal', backendResult, activeApi.addGrowthSignal(signal));
+};
+
+const getGrowthPathWithFallback = async (): Promise<ApiResult<GrowthPathResponse>> => {
+  const backendResult = await apiClient.get<BackendGrowthPathEnvelope>('/growth-path', {
+    timeoutMs: GROWTH_TIMEOUT_MS,
+  });
+
+  if (backendResult.ok) {
+    const growthPath = normalizeGrowthPath(backendResult.data);
+
+    if (growthPath) {
+      return { ok: true, source: 'backend', data: growthPath };
+    }
+  }
+
+  return fallbackWithWarning('Growth Path', backendResult, activeApi.getGrowthPath());
+};
+
+const regenerateGrowthPathWithFallback = async (
+  request: GrowthPathRegenerateRequest,
+): Promise<ApiResult<GrowthPathResponse>> => {
+  const backendResult = await apiClient.post<BackendGrowthPathEnvelope>(
+    '/growth-path/regenerate',
+    request,
+    {
+      timeoutMs: GROWTH_TIMEOUT_MS,
+    },
+  );
+
+  if (backendResult.ok) {
+    const growthPath = normalizeGrowthPath(backendResult.data);
+
+    if (growthPath) {
+      return { ok: true, source: 'backend', data: growthPath };
+    }
+  }
+
+  return fallbackWithWarning(
+    'Growth Path regenerate',
+    backendResult,
+    activeApi.regenerateGrowthPath(request),
+  );
+};
+
+const getProfileWithFallback = async (): Promise<ApiResult<ProfileResponse>> => {
+  const backendResult = await apiClient.get<BackendProfileEnvelope>('/profile', {
+    timeoutMs: PROFILE_TIMEOUT_MS,
+  });
+
+  if (backendResult.ok) {
+    const profile = normalizeProfile(backendResult.data);
+
+    if (profile) {
+      return { ok: true, source: 'backend', data: profile };
+    }
+  }
+
+  return fallbackWithWarning('Profile', backendResult, activeApi.getProfile());
+};
+
+const updateProfileGoalsWithFallback = async (
+  request: ProfileGoalsRequest,
+): Promise<ApiResult<ProfileResponse>> => {
+  const backendResult = await apiClient.post<BackendProfileEnvelope>('/profile/goals', request, {
+    timeoutMs: PROFILE_TIMEOUT_MS,
+  });
+
+  if (backendResult.ok) {
+    const profile = normalizeProfile(backendResult.data);
+
+    if (profile) {
+      return { ok: true, source: 'backend', data: profile };
+    }
+  }
+
+  return fallbackWithWarning(
+    'Profile goals',
+    backendResult,
+    activeApi.updateProfileGoals(request),
+  );
+};
+
 export const picolabApi = {
   parseProblem: (input: ProblemInput) => parseProblemWithFallback(input),
   scanProblem: (input: ProblemScanInput) => scanProblemWithFallback(input),
@@ -695,8 +1043,11 @@ export const picolabApi = {
   checkStep: (request: StepCheckRequest) => checkStepWithFallback(request),
   selectVisualTemplate: (request: VisualLabTemplateRequest) =>
     activeApi.selectVisualTemplate(request),
-  getGrowthMap: () => activeApi.getGrowthMap(),
-  getGrowthPath: () => activeApi.getGrowthPath(),
+  getGrowthMap: () => getGrowthMapWithFallback(),
+  addGrowthSignal: (signal: GrowthSignalRequest) => addGrowthSignalWithFallback(signal),
+  getGrowthPath: () => getGrowthPathWithFallback(),
+  regenerateGrowthPath: (request: GrowthPathRegenerateRequest) =>
+    regenerateGrowthPathWithFallback(request),
   getDailyPractice: () => getDailyPracticeWithFallback(),
   getFocusPractice: () => getFocusPracticeWithFallback(),
   getRandomPractice: () => getRandomPracticeWithFallback(),
@@ -704,7 +1055,8 @@ export const picolabApi = {
   completePracticeMission: (request: PracticeCompleteRequest) =>
     completePracticeMissionWithFallback(request),
   askPico: (request: AskPicoRequest) => askPicoWithFallback(request),
-  getProfile: () => activeApi.getProfile(),
+  getProfile: () => getProfileWithFallback(),
+  updateProfileGoals: (request: ProfileGoalsRequest) => updateProfileGoalsWithFallback(request),
   getSettings: () => activeApi.getSettings(),
 };
 
@@ -716,7 +1068,9 @@ export const {
   checkStep,
   selectVisualTemplate,
   getGrowthMap,
+  addGrowthSignal,
   getGrowthPath,
+  regenerateGrowthPath,
   getDailyPractice,
   getFocusPractice,
   getRandomPractice,
@@ -724,5 +1078,6 @@ export const {
   completePracticeMission,
   askPico,
   getProfile,
+  updateProfileGoals,
   getSettings,
 } = picolabApi;

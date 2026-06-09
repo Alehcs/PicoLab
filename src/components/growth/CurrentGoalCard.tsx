@@ -6,9 +6,17 @@ type CurrentGoalCardProps = {
   title: string;
   value: string;
   copy: string;
+  onEditGoal?: () => void;
+  editing?: boolean;
 };
 
-export function CurrentGoalCard({ title, value, copy }: CurrentGoalCardProps) {
+export function CurrentGoalCard({
+  title,
+  value,
+  copy,
+  onEditGoal,
+  editing = false,
+}: CurrentGoalCardProps) {
   return (
     <Card className="px-5 py-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -24,7 +32,9 @@ export function CurrentGoalCard({ title, value, copy }: CurrentGoalCardProps) {
             <p className="mt-1 text-[12.5px] leading-relaxed text-pico-secondary">{copy}</p>
           </div>
         </div>
-        <Button variant="secondary" size="sm">Edit goal</Button>
+        <Button variant="secondary" size="sm" onClick={onEditGoal} disabled={editing}>
+          {editing ? 'Updating...' : 'Edit goal'}
+        </Button>
       </div>
     </Card>
   );
