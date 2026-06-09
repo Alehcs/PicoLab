@@ -6,17 +6,47 @@ import type {
   LearningSignal,
   ParsedProblem,
 } from '../types/api.js';
+import { getSignalDefinition } from './learningSignals.js';
 
 export const mockProblemText =
   'An object starts at 2 m/s and accelerates at 4 m/s² for 2 seconds. Find the final velocity.';
 
+const finalUnitSignalDefinition = getSignalDefinition('units.final_unit_mismatch');
+const unitCancellationSignalDefinition = getSignalDefinition('units.unit_cancellation');
+const quantityConfusionSignalDefinition = getSignalDefinition('concept.quantity_confusion');
+
 export const unitLearningSignal: LearningSignal = {
-  id: 'unit-mismatch',
+  id: 'units.final_unit_mismatch',
   kind: 'unitMismatch',
-  title: 'Unit mismatch',
-  description: 'The calculation is close, and the final unit needs to match velocity.',
+  signalId: 'units.final_unit_mismatch',
+  category: 'units',
+  subtype: 'final_unit_mismatch',
+  studentFriendlyLabel: finalUnitSignalDefinition?.studentFriendlyLabel,
+  title: finalUnitSignalDefinition?.title ?? 'Final unit mismatch',
+  description:
+    finalUnitSignalDefinition?.description ??
+    'The calculation is close, and the final unit needs to match velocity.',
   strength: 4,
-  suggestedFocus: 'Units in motion',
+  suggestedFocus: finalUnitSignalDefinition?.growthPathFocus[0] ?? 'Units in motion',
+  suggestedPractice: finalUnitSignalDefinition?.suggestedPractice,
+  suggestedVisualTemplate: finalUnitSignalDefinition?.suggestedVisualTemplate,
+};
+
+export const unitCancellationLearningSignal: LearningSignal = {
+  id: 'units.unit_cancellation',
+  kind: 'unitMismatch',
+  signalId: 'units.unit_cancellation',
+  category: 'units',
+  subtype: 'unit_cancellation',
+  studentFriendlyLabel: unitCancellationSignalDefinition?.studentFriendlyLabel,
+  title: unitCancellationSignalDefinition?.title ?? 'Unit cancellation',
+  description:
+    unitCancellationSignalDefinition?.description ??
+    'The unit cancellation needs a little support.',
+  strength: 3,
+  suggestedFocus: unitCancellationSignalDefinition?.growthPathFocus[0] ?? 'Unit reasoning',
+  suggestedPractice: unitCancellationSignalDefinition?.suggestedPractice,
+  suggestedVisualTemplate: unitCancellationSignalDefinition?.suggestedVisualTemplate,
 };
 
 export const extractedDetails: ExtractedDetail[] = [
@@ -215,12 +245,20 @@ export const growthMap = {
   learningSignals: [
     unitLearningSignal,
     {
-      id: 'quantity-confusion',
+      id: 'concept.quantity_confusion',
       kind: 'quantityConfusion',
-      title: 'Quantity confusion',
-      description: 'Velocity and distance sometimes need clearer separation.',
+      signalId: 'concept.quantity_confusion',
+      category: 'concept',
+      subtype: 'quantity_confusion',
+      studentFriendlyLabel: quantityConfusionSignalDefinition?.studentFriendlyLabel,
+      title: quantityConfusionSignalDefinition?.title ?? 'Quantity distinction',
+      description:
+        quantityConfusionSignalDefinition?.description ??
+        'Velocity and distance sometimes need clearer separation.',
       strength: 3,
-      suggestedFocus: 'Velocity vs. distance',
+      suggestedFocus: quantityConfusionSignalDefinition?.growthPathFocus[0] ?? 'Velocity vs. distance',
+      suggestedPractice: quantityConfusionSignalDefinition?.suggestedPractice,
+      suggestedVisualTemplate: quantityConfusionSignalDefinition?.suggestedVisualTemplate,
     },
   ],
   strengths: ['Formula setup', 'Substitution'],

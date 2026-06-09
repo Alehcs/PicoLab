@@ -36,9 +36,9 @@ const localGrowthMap: GrowthMapResponse = {
   learningSignals: growthLearningSignals.map((signal) => ({
     id: signal.id,
     kind:
-      signal.id === 'sign-slips'
+      signal.id.startsWith('algebra.')
         ? 'signSlip'
-        : signal.id === 'quantity-confusion'
+        : signal.id.startsWith('concept.')
           ? 'quantityConfusion'
           : 'unitMismatch',
     title: signal.title,

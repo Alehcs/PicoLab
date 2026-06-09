@@ -3,7 +3,7 @@ import {
   dailyPractice,
   focusPractice,
   randomPractice,
-  unitLearningSignal,
+  unitCancellationLearningSignal,
 } from '../data/mockResponses.js';
 import { createResponseMeta } from '../middleware/errorHandler.js';
 
@@ -55,7 +55,7 @@ practiceRouter.post('/practice/check-answer', (req, res) => {
         ? 'Nice reasoning. The unit simplifies to m/s, which describes velocity.'
         : 'Useful signal. Try reducing the units before choosing the quantity.',
       explanation: 'm/s² · s cancels one second and leaves m/s.',
-      learningSignal: isCorrect ? undefined : unitLearningSignal,
+      learningSignal: isCorrect ? undefined : unitCancellationLearningSignal,
       picoPointsPreview: isCorrect ? 25 : 0,
       source: 'mock',
     },

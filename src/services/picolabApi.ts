@@ -270,6 +270,16 @@ const learningSignalKinds: LearningSignalKind[] = [
   'graphReading',
 ];
 
+const learningSignalCategories = [
+  'algebra',
+  'units',
+  'formula',
+  'concept',
+  'graph',
+  'reading',
+  'calculation',
+] as const;
+
 const normalizeExtractedDetail = (
   value: unknown,
   index: number,
@@ -303,6 +313,15 @@ const normalizeLearningSignal = (value: unknown): LearningSignal | undefined => 
       typeof value.kind === 'string' && learningSignalKinds.includes(value.kind as LearningSignalKind)
         ? (value.kind as LearningSignalKind)
         : 'unitMismatch',
+    signalId: typeof value.signalId === 'string' ? value.signalId : undefined,
+    category:
+      typeof value.category === 'string' &&
+      learningSignalCategories.includes(value.category as (typeof learningSignalCategories)[number])
+        ? (value.category as LearningSignal['category'])
+        : undefined,
+    subtype: typeof value.subtype === 'string' ? value.subtype : undefined,
+    studentFriendlyLabel:
+      typeof value.studentFriendlyLabel === 'string' ? value.studentFriendlyLabel : undefined,
     title: typeof value.title === 'string' ? value.title : 'Learning signal',
     description:
       typeof value.description === 'string'
@@ -311,6 +330,13 @@ const normalizeLearningSignal = (value: unknown): LearningSignal | undefined => 
     strength: typeof value.strength === 'number' ? value.strength : 1,
     suggestedFocus:
       typeof value.suggestedFocus === 'string' ? value.suggestedFocus : 'Review this step',
+    suggestedPractice: Array.isArray(value.suggestedPractice)
+      ? value.suggestedPractice.filter((item): item is string => typeof item === 'string')
+      : undefined,
+    suggestedVisualTemplate:
+      typeof value.suggestedVisualTemplate === 'string'
+        ? value.suggestedVisualTemplate
+        : undefined,
   };
 };
 

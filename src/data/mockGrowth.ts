@@ -69,7 +69,7 @@ export const growthMapSummaryCards: GrowthSummaryCardData[] = [
 
 export const growthLearningSignals: GrowthSignal[] = [
   {
-    id: 'unit-mismatch',
+    id: 'units.final_unit_mismatch',
     title: 'Unit mismatch',
     badge: 'Seen 4 times',
     description: 'You often get the number right, but the unit does not match the quantity.',
@@ -80,7 +80,7 @@ export const growthLearningSignals: GrowthSignal[] = [
     strength: 4,
   },
   {
-    id: 'sign-slips',
+    id: 'algebra.sign_error',
     title: 'Sign slips',
     badge: 'Seen 2 times',
     description: 'Negative signs sometimes disappear when rearranging equations.',
@@ -89,7 +89,7 @@ export const growthLearningSignals: GrowthSignal[] = [
     strength: 2,
   },
   {
-    id: 'quantity-confusion',
+    id: 'concept.quantity_confusion',
     title: 'Quantity confusion',
     badge: 'Seen 3 times',
     description: 'Velocity and distance are being mixed in motion problems.',

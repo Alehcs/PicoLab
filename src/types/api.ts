@@ -1,3 +1,5 @@
+import type { LearningSignalCategory } from './learningSignals';
+
 export type ApiError = {
   code: string;
   message: string;
@@ -121,10 +123,16 @@ export type LearningSignalKind =
 export type LearningSignal = {
   id: string;
   kind: LearningSignalKind;
+  signalId?: string;
+  category?: LearningSignalCategory;
+  subtype?: string;
+  studentFriendlyLabel?: string;
   title: string;
   description: string;
   strength: number;
   suggestedFocus: string;
+  suggestedPractice?: string[];
+  suggestedVisualTemplate?: string;
   sourceProblemId?: string;
 };
 

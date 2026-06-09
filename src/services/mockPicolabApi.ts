@@ -20,6 +20,7 @@ import { dailyChallenge, focusMission, randomMissions } from '../data/mockMissio
 import { sampleProblem } from '../data/mockProblem';
 import { initialSettingsState } from '../data/mockSettings';
 import { visualLabDefaults } from '../data/mockVisualLab';
+import { getSignalDefinition } from '../data/learningSignals';
 import type {
   ApiResult,
   AskPicoRequest,
@@ -49,15 +50,42 @@ import type {
 } from '../types/api';
 
 const MOCK_PROBLEM_ID = 'mock-problem-final-velocity';
+const finalUnitSignalDefinition = getSignalDefinition('units.final_unit_mismatch');
+const unitCancellationSignalDefinition = getSignalDefinition('units.unit_cancellation');
 
 const mockLearningSignal: LearningSignal = {
-  id: 'unit-mismatch',
+  id: 'units.final_unit_mismatch',
   kind: 'unitMismatch',
-  title: 'Unit mismatch',
-  description: 'The number is on track, and the final unit needs to match velocity.',
+  signalId: 'units.final_unit_mismatch',
+  category: 'units',
+  subtype: 'final_unit_mismatch',
+  studentFriendlyLabel: finalUnitSignalDefinition?.studentFriendlyLabel,
+  title: finalUnitSignalDefinition?.title ?? 'Final unit mismatch',
+  description:
+    finalUnitSignalDefinition?.description ??
+    'The number is on track, and the final unit needs to match velocity.',
   strength: 4,
-  suggestedFocus: 'Units in motion',
+  suggestedFocus: finalUnitSignalDefinition?.growthPathFocus[0] ?? 'Units in motion',
+  suggestedPractice: finalUnitSignalDefinition?.suggestedPractice,
+  suggestedVisualTemplate: finalUnitSignalDefinition?.suggestedVisualTemplate,
   sourceProblemId: MOCK_PROBLEM_ID,
+};
+
+const practiceUnitSignal: LearningSignal = {
+  id: 'units.unit_cancellation',
+  kind: 'unitMismatch',
+  signalId: 'units.unit_cancellation',
+  category: 'units',
+  subtype: 'unit_cancellation',
+  studentFriendlyLabel: unitCancellationSignalDefinition?.studentFriendlyLabel,
+  title: unitCancellationSignalDefinition?.title ?? 'Unit cancellation',
+  description:
+    unitCancellationSignalDefinition?.description ??
+    'The unit cancellation needs a little support.',
+  strength: 3,
+  suggestedFocus: unitCancellationSignalDefinition?.growthPathFocus[0] ?? 'Unit reasoning',
+  suggestedPractice: unitCancellationSignalDefinition?.suggestedPractice,
+  suggestedVisualTemplate: unitCancellationSignalDefinition?.suggestedVisualTemplate,
 };
 
 const withMockResult = async <T>(data: T, latencyMs = 120): Promise<ApiResult<T>> =>
@@ -167,11 +195,14 @@ const learningSignalFromGrowthSignal = (
 ): LearningSignal => ({
   id: signal.id,
   kind:
-    signal.id === 'sign-slips'
+    signal.id.startsWith('algebra.')
       ? 'signSlip'
-      : signal.id === 'quantity-confusion'
+      : signal.id.startsWith('concept.')
         ? 'quantityConfusion'
         : 'unitMismatch',
+  signalId: signal.id,
+  category: signal.id.split('.')[0] as LearningSignal['category'],
+  subtype: signal.id.split('.')[1],
   title: signal.title,
   description: signal.description,
   strength: signal.strength,
@@ -326,7 +357,7 @@ export const mockPicolabApi = {
       learningSignal:
         request.selectedOptionId === focusMission.question.correctOptionId
           ? undefined
-          : mockLearningSignal,
+          : practiceUnitSignal,
     }),
 
   completePracticeMission: (

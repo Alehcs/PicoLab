@@ -1,3 +1,5 @@
+import type { LearningSignalCategory } from './learningSignals.js';
+
 export type ApiMode = 'mock';
 
 export type ApiMeta = {
@@ -28,10 +30,16 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
 export type LearningSignal = {
   id: string;
   kind: 'unitMismatch' | 'signSlip' | 'quantityConfusion' | 'formulaSelection';
+  signalId?: string;
+  category?: LearningSignalCategory;
+  subtype?: string;
+  studentFriendlyLabel?: string;
   title: string;
   description: string;
   strength: number;
   suggestedFocus: string;
+  suggestedPractice?: string[];
+  suggestedVisualTemplate?: string;
 };
 
 export type ExtractedDetail = {
