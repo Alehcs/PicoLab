@@ -18,7 +18,10 @@ import {
 } from '../data/mockNotebook';
 import { picolabApi } from '../services/picolabApi';
 import { readCurrentProblem } from '../services/problemSession';
-import { storeVisualLabSuggestionFromSignals } from '../services/visualLabSuggestion';
+import {
+  storeVisualLabSuggestionFromSignal,
+  storeVisualLabSuggestionFromSignals,
+} from '../services/visualLabSuggestion';
 import type { ProblemEntity, StepCheckResponse } from '../types/api';
 
 const createProblemFromEntity = (problem: ProblemEntity | null): NotebookProblem => {
@@ -58,10 +61,18 @@ export function SmartNotebookPage() {
   );
 
   const openVisualLab = () => {
-    storeVisualLabSuggestionFromSignals(
-      stepCheckResult?.signals ??
-        (stepCheckResult?.primarySignal ? [stepCheckResult.primarySignal] : undefined),
-    );
+    if (stepCheckResult?.signals?.length || stepCheckResult?.primarySignal) {
+      storeVisualLabSuggestionFromSignals(
+        stepCheckResult.signals ?? [stepCheckResult.primarySignal!],
+      );
+    } else {
+      storeVisualLabSuggestionFromSignal({
+        signalId: 'units.final_unit_mismatch',
+        category: 'units',
+        suggestedVisualTemplate: 'units',
+        title: 'The final unit needs attention',
+      });
+    }
     navigate('/visual-lab');
   };
   const viewGrowthMap = () => navigate('/growth-map');
