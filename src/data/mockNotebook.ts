@@ -118,6 +118,62 @@ export const mockNotebookSteps: NotebookStep[] = [
   },
 ];
 
+// Interactive Smart Notebook flow copy. The notebook progresses step by step
+// using local React state; this is the static, deterministic content the page
+// pairs with the backend-first/fallback step-2 check.
+export const notebookFlow = {
+  step1: {
+    title: 'Step 1',
+    instruction: 'Set up the formula with the known values.',
+    placeholder: 'Write the formula setup, for example: v = v₀ + at',
+    defaultInput: 'v = 0 + 2 · 5',
+    resolvedTitle: 'Nice setup',
+    resolvedMessage: 'Your formula connects the known values to the target.',
+    emptyPrompt: 'Try writing the formula or substituting the known values first.',
+  },
+  step2: {
+    title: 'Step 2',
+    instruction: 'Calculate the final value and include the unit.',
+    placeholder: 'Write the final value with its unit, for example: v = 10 m/s',
+    defaultInput: 'v = 10 m',
+    resolvedTitle: 'Step resolved',
+    resolvedMessage: 'Nice adjustment — the quantity and unit now match.',
+    emptyPrompt: 'Add the final value with its unit before checking, for example v = 10 m/s.',
+    hint: 'Multiply the units first: m/s² × s leaves m/s. So the final answer is v = 10 m/s.',
+  },
+  step3: {
+    title: 'Step 3',
+    instruction: 'Interpret the result.',
+    placeholder: 'Write what 10 m/s means in this problem…',
+    resolvedTitle: 'Nice interpretation',
+    resolvedMessage: 'You connected the result back to the problem.',
+    emptyPrompt: 'Try writing what the final velocity means for the car.',
+  },
+  step4: {
+    title: 'Step 4',
+    instruction: 'Connect the result to a visual model.',
+    message: 'Use Visual Lab to see why acceleration over time changes velocity.',
+  },
+} as const;
+
+// Shown when Step 1's setup does not connect the right quantities.
+export const step1FormulaSignal: LearningSignal = {
+  title: 'Formula setup needs attention',
+  subtitle: 'Let’s connect the right quantities.',
+  status: 'Learning signal',
+  sections: [
+    { title: 'What went well', body: 'You started the solution.' },
+    {
+      title: 'What to adjust',
+      body: 'Use a formula that connects initial velocity, acceleration, time, and final velocity.',
+    },
+    {
+      title: 'Why it matters',
+      body: 'The setup tells Pico which quantities you are connecting.',
+    },
+  ],
+};
+
 export const mockPicoCoach = {
   title: 'Pico says',
   message:

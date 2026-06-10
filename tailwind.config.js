@@ -1,6 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  // Button and Badge build their variant/size class names dynamically
+  // (`p-btn-${variant}`, `p-badge-${variant}`), so the literal names never
+  // appear in source for the content scanner. These component classes live in
+  // `@layer components`, which Tailwind tree-shakes — without safelisting them
+  // the variant styles get purged and buttons/badges render unstyled.
+  safelist: [{ pattern: /^p-btn(-.+)?$/ }, { pattern: /^p-badge(-.+)?$/ }],
   theme: {
     extend: {
       colors: {
