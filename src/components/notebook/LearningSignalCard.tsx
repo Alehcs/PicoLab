@@ -1,4 +1,4 @@
-import { Lightbulb, Sparkles } from 'lucide-react';
+import { Check, Lightbulb, Sparkles } from 'lucide-react';
 import type { LearningSignal } from '../../data/mockNotebook';
 import { FormulaBlock } from '../math/FormulaBlock';
 import { Badge } from '../ui/Badge';
@@ -10,6 +10,7 @@ type LearningSignalCardProps = {
   onOpenVisual: () => void;
   onCheckStep?: () => void;
   checkPending?: boolean;
+  resolved?: boolean;
 };
 
 export function LearningSignalCard({
@@ -17,7 +18,39 @@ export function LearningSignalCard({
   onOpenVisual,
   onCheckStep,
   checkPending = false,
+  resolved = false,
 }: LearningSignalCardProps) {
+  if (resolved) {
+    return (
+      <Card className="p-fade flex flex-col gap-3.5 border-[#BBE3CC] bg-pico-softGreen px-4 py-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[#2A7850]">
+            <Check size={16} aria-hidden="true" />
+          </div>
+          <div>
+            <div className="text-[13.5px] font-bold text-[#2A7850]">Step resolved</div>
+            <div className="mt-0.5 text-[12px] font-medium text-[#3A8860]">
+              The final unit now matches velocity (m/s).
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+          <Button variant="coral" size="sm" onClick={onCheckStep} disabled={checkPending}>
+            {checkPending ? 'Pico is checking...' : 'Check this step'}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={onOpenVisual}>
+            <Sparkles size={13} />
+            Open visual explanation
+          </Button>
+          <Badge variant="green" className="ml-0 sm:ml-auto">
+            Resolved
+          </Badge>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card variant="signal" className="p-fade flex flex-col gap-3.5 px-4 py-4">
       <div className="flex items-start gap-3">

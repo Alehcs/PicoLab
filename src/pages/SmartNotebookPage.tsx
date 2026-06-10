@@ -61,6 +61,8 @@ export function SmartNotebookPage() {
     [currentProblem],
   );
 
+  const stepResolved = stepCheckResult?.stepStatus === 'complete';
+
   const openVisualLab = () => {
     if (stepCheckResult?.signals?.length || stepCheckResult?.primarySignal) {
       storeVisualLabSuggestionFromSignals(
@@ -170,6 +172,7 @@ export function SmartNotebookPage() {
                 checkPending={step.status === 'learning-signal' && checkPending}
                 editableStudentInput={step.status === 'learning-signal' ? step2Input : undefined}
                 onStudentInputChange={step.status === 'learning-signal' ? setStep2Input : undefined}
+                resolved={step.status === 'learning-signal' ? stepResolved : false}
               />
             ))}
           </div>

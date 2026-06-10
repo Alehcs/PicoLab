@@ -241,18 +241,39 @@ export const mockPicolabApi = {
       stepId: request.stepId,
     });
     const learningSignal = learningSignalFromInstance(diagnostic.primarySignal);
-    appendDiagnosticSignals(diagnostic.signals);
+    // Mirror the backend (server/src/routes/notebooks.ts): an answer that already
+    // carries velocity units is a strong step, not a unit mismatch. This keeps the
+    // canonical `v = 10 m` mistake path unchanged while making `v = 10 m/s` resolve
+    // cleanly in the local fallback too.
+    const includesVelocityUnit =
+      diagnostic.signals.length === 0 || /m\/s\b/.test(request.studentInput);
+
+    // Only record diagnostic signals for an actual mistake, so a correct answer does
+    // not pollute the Growth Map with a false unit signal.
+    if (!includesVelocityUnit) {
+      appendDiagnosticSignals(diagnostic.signals);
+    }
 
     return withMockResult({
-      stepStatus: diagnostic.signals.length ? 'needsAttention' : 'complete',
-      supportiveFeedback: diagnostic.supportiveFeedback,
+      stepStatus: includesVelocityUnit ? 'complete' : 'needsAttention',
+      supportiveFeedback: includesVelocityUnit
+        ? 'Nice adjustment. The final unit now matches velocity.'
+        : diagnostic.supportiveFeedback,
       explanation: diagnostic.whyItMatters ?? 'Acceleration times time leaves m/s, so the result describes velocity.',
       whatWentWell: diagnostic.whatWentWell,
-      whatToAdjust: diagnostic.whatToAdjust,
+      whatToAdjust: includesVelocityUnit
+        ? 'Add a brief interpretation of what the final velocity means.'
+        : diagnostic.whatToAdjust,
       whyItMatters: diagnostic.whyItMatters,
-      suggestedNextStep: 'Rewrite the final answer with m/s and explain what it represents.',
-      suggestedNextAction: diagnostic.suggestedVisualTemplate ? 'Open the visual support.' : undefined,
-      learningSignal,
+      suggestedNextStep: includesVelocityUnit
+        ? 'Interpret the result: what does the final velocity tell you?'
+        : 'Rewrite the final answer with m/s and explain what it represents.',
+      suggestedNextAction: includesVelocityUnit
+        ? 'Interpret the result.'
+        : diagnostic.suggestedVisualTemplate
+          ? 'Open the visual support.'
+          : undefined,
+      learningSignal: includesVelocityUnit ? undefined : learningSignal,
       primarySignal: diagnostic.primarySignal,
       signals: diagnostic.signals,
       diagnostic,

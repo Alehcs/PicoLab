@@ -12,6 +12,7 @@ type NotebookStepCardProps = {
   checkPending?: boolean;
   editableStudentInput?: string;
   onStudentInputChange?: (value: string) => void;
+  resolved?: boolean;
 };
 
 const stepCircleClass = {
@@ -27,14 +28,17 @@ export function NotebookStepCard({
   checkPending = false,
   editableStudentInput,
   onStudentInputChange,
+  resolved = false,
 }: NotebookStepCardProps) {
   const isUpcoming = step.status === 'upcoming';
   const isActive = editableStudentInput !== undefined;
-  const borderClass = isActive
-    ? 'border-[#B8D8F4] ring-1 ring-[#B8D8F4]'
-    : step.status === 'learning-signal'
-      ? 'border-[#FDDADA]'
-      : '';
+  const borderClass = resolved
+    ? 'border-[#BBE3CC] ring-1 ring-[#BBE3CC]'
+    : isActive
+      ? 'border-[#B8D8F4] ring-1 ring-[#B8D8F4]'
+      : step.status === 'learning-signal'
+        ? 'border-[#FDDADA]'
+        : '';
 
   return (
     <Card className={`${borderClass} overflow-hidden ${isUpcoming ? 'opacity-55' : ''}`.trim()}>
@@ -52,7 +56,9 @@ export function NotebookStepCard({
             {step.prompt}
           </div>
         </div>
-        {isActive ? <Badge variant="blue">Active step</Badge> : null}
+        {isActive ? (
+          <Badge variant={resolved ? 'green' : 'blue'}>{resolved ? 'Resolved' : 'Active step'}</Badge>
+        ) : null}
         {!isActive && step.status === 'correct' ? <Badge variant="green">Correct</Badge> : null}
         {!isActive && step.status === 'learning-signal' ? <Badge variant="coral">Signal found</Badge> : null}
         {step.status === 'upcoming' ? <Badge variant="grey">Upcoming</Badge> : null}
@@ -66,7 +72,9 @@ export function NotebookStepCard({
               <div
                 className={`rounded-[11px] px-4 py-3 ${
                   isActive
-                    ? 'border-[1.5px] border-[#B8D8F4] bg-white'
+                    ? resolved
+                      ? 'border-[1.5px] border-[#BBE3CC] bg-white'
+                      : 'border-[1.5px] border-[#B8D8F4] bg-white'
                     : step.status === 'learning-signal'
                       ? 'border-[1.5px] border-[#FDDADA] bg-[#FFF8F8]'
                       : 'bg-pico-soft'
@@ -77,13 +85,17 @@ export function NotebookStepCard({
                     <input
                       type="text"
                       aria-label="Your step answer"
-                      className="w-full bg-transparent p-mono text-lg font-semibold text-[#8A3030] outline-none placeholder:font-normal placeholder:text-pico-muted"
+                      className={`w-full bg-transparent p-mono text-lg font-semibold outline-none placeholder:font-normal placeholder:text-pico-muted ${
+                        resolved ? 'text-[#2A7850]' : 'text-[#8A3030]'
+                      }`}
                       value={editableStudentInput}
                       onChange={(e) => onStudentInputChange?.(e.target.value)}
                       placeholder="Type your answer here…"
                     />
                     <p className="mt-1.5 text-[11.5px] text-pico-muted">
-                      Type your step, then let Pico check the reasoning and units.
+                      {resolved
+                        ? 'Looks good — the unit now matches velocity.'
+                        : 'Type your step, then let Pico check the reasoning and units.'}
                     </p>
                   </>
                 ) : (
@@ -113,6 +125,7 @@ export function NotebookStepCard({
               onOpenVisual={onOpenVisual}
               onCheckStep={onCheckStep}
               checkPending={checkPending}
+              resolved={resolved}
             />
           ) : null}
         </div>
