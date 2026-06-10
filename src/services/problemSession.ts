@@ -2,6 +2,9 @@ import type { ParsedProblem, ProblemEntity } from '../types/api';
 
 export const CURRENT_PARSED_PROBLEM_KEY = 'picolab.currentParsedProblem';
 export const CURRENT_PROBLEM_KEY = 'picolab.currentProblem';
+export const INPUT_SOURCE_KEY = 'picolab.inputSource';
+
+export type InputSource = 'typed' | 'scan' | 'formula';
 
 const canUseSessionStorage = () =>
   typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined';
@@ -39,4 +42,10 @@ export const readCurrentProblem = () => readJson<ProblemEntity>(CURRENT_PROBLEM_
 
 export const writeCurrentProblem = (problem: ProblemEntity) => {
   writeJson(CURRENT_PROBLEM_KEY, problem);
+};
+
+export const readInputSource = () => readJson<InputSource>(INPUT_SOURCE_KEY);
+
+export const writeInputSource = (source: InputSource) => {
+  writeJson(INPUT_SOURCE_KEY, source);
 };

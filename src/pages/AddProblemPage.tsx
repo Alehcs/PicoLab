@@ -11,7 +11,7 @@ import { Card } from '../components/ui/Card';
 import { Tabs, type TabItem } from '../components/ui/Tabs';
 import { sampleProblem, topicChips } from '../data/mockProblem';
 import { picolabApi } from '../services/picolabApi';
-import { writeCurrentParsedProblem } from '../services/problemSession';
+import { writeCurrentParsedProblem, writeInputSource } from '../services/problemSession';
 
 type AddProblemTab = 'scan' | 'type' | 'formula';
 
@@ -42,6 +42,7 @@ export function AddProblemPage() {
     if (pendingAction) return;
 
     setPendingAction('reading');
+    writeInputSource('typed');
 
     try {
       const text = problemText.trim() || sampleProblem.text;
@@ -69,6 +70,7 @@ export function AddProblemPage() {
     if (pendingAction) return;
 
     setPendingAction('reading');
+    writeInputSource('formula');
 
     try {
       const result = await picolabApi.parseProblem({
@@ -94,6 +96,7 @@ export function AddProblemPage() {
     if (pendingAction) return;
 
     setPendingAction('scanning');
+    writeInputSource('scan');
 
     try {
       const result = await picolabApi.scanProblem({
@@ -190,9 +193,14 @@ export function AddProblemPage() {
             </div>
           ) : null}
 
-          <Button className="w-fit" onClick={analyzeProblem} disabled={Boolean(pendingAction)}>
+          <Button
+            className={`min-w-[160px] ${!problemText.trim() && !pendingAction ? 'opacity-60' : ''}`}
+            onClick={analyzeProblem}
+            disabled={Boolean(pendingAction)}
+            title={!problemText.trim() ? 'Will analyze sample problem' : undefined}
+          >
             <Sparkles size={15} />
-            Analyze problem
+            {pendingAction === 'reading' ? 'Analyzing...' : 'Analyze problem'}
           </Button>
         </div>
       ) : null}

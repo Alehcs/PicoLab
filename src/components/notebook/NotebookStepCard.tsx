@@ -10,6 +10,8 @@ type NotebookStepCardProps = {
   onOpenVisual: () => void;
   onCheckStep?: () => void;
   checkPending?: boolean;
+  editableStudentInput?: string;
+  onStudentInputChange?: (value: string) => void;
 };
 
 const stepCircleClass = {
@@ -23,9 +25,16 @@ export function NotebookStepCard({
   onOpenVisual,
   onCheckStep,
   checkPending = false,
+  editableStudentInput,
+  onStudentInputChange,
 }: NotebookStepCardProps) {
   const isUpcoming = step.status === 'upcoming';
-  const borderClass = step.status === 'learning-signal' ? 'border-[#FDDADA]' : '';
+  const isActive = editableStudentInput !== undefined;
+  const borderClass = isActive
+    ? 'border-[#B8D8F4] ring-1 ring-[#B8D8F4]'
+    : step.status === 'learning-signal'
+      ? 'border-[#FDDADA]'
+      : '';
 
   return (
     <Card className={`${borderClass} overflow-hidden ${isUpcoming ? 'opacity-55' : ''}`.trim()}>
@@ -43,31 +52,50 @@ export function NotebookStepCard({
             {step.prompt}
           </div>
         </div>
-        {step.status === 'correct' ? <Badge variant="green">Correct</Badge> : null}
-        {step.status === 'learning-signal' ? <Badge variant="coral">Signal found</Badge> : null}
+        {isActive ? <Badge variant="blue">Active step</Badge> : null}
+        {!isActive && step.status === 'correct' ? <Badge variant="green">Correct</Badge> : null}
+        {!isActive && step.status === 'learning-signal' ? <Badge variant="coral">Signal found</Badge> : null}
         {step.status === 'upcoming' ? <Badge variant="grey">Upcoming</Badge> : null}
       </div>
 
       {isUpcoming ? null : (
         <div className="flex flex-col gap-3.5 px-[18px] py-4">
-          {step.studentInput ? (
+          {(step.studentInput || isActive) ? (
             <div>
               <div className="p-section-lbl mb-2">Student input</div>
               <div
                 className={`rounded-[11px] px-4 py-3 ${
-                  step.status === 'learning-signal'
-                    ? 'border-[1.5px] border-[#FDDADA] bg-[#FFF8F8]'
-                    : 'bg-pico-soft'
+                  isActive
+                    ? 'border-[1.5px] border-[#B8D8F4] bg-white'
+                    : step.status === 'learning-signal'
+                      ? 'border-[1.5px] border-[#FDDADA] bg-[#FFF8F8]'
+                      : 'bg-pico-soft'
                 }`}
               >
-                <FormulaBlock
-                  size="lg"
-                  className={`font-semibold ${
-                    step.status === 'learning-signal' ? 'text-[#8A3030]' : ''
-                  }`}
-                >
-                  {step.studentInput}
-                </FormulaBlock>
+                {isActive ? (
+                  <>
+                    <input
+                      type="text"
+                      aria-label="Your step answer"
+                      className="w-full bg-transparent p-mono text-lg font-semibold text-[#8A3030] outline-none placeholder:font-normal placeholder:text-pico-muted"
+                      value={editableStudentInput}
+                      onChange={(e) => onStudentInputChange?.(e.target.value)}
+                      placeholder="Type your answer here…"
+                    />
+                    <p className="mt-1.5 text-[11.5px] text-pico-muted">
+                      Type your step, then let Pico check the reasoning and units.
+                    </p>
+                  </>
+                ) : (
+                  <FormulaBlock
+                    size="lg"
+                    className={`font-semibold ${
+                      step.status === 'learning-signal' ? 'text-[#8A3030]' : ''
+                    }`}
+                  >
+                    {step.studentInput}
+                  </FormulaBlock>
+                )}
               </div>
             </div>
           ) : null}

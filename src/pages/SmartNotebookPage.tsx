@@ -50,6 +50,7 @@ export function SmartNotebookPage() {
   const [currentProblem, setCurrentProblem] = useState<ProblemEntity | null>(null);
   const [checkPending, setCheckPending] = useState(false);
   const [stepCheckResult, setStepCheckResult] = useState<StepCheckResponse | null>(null);
+  const [step2Input, setStep2Input] = useState('v = 10 m');
 
   useEffect(() => {
     setCurrentProblem(readCurrentProblem());
@@ -87,7 +88,7 @@ export function SmartNotebookPage() {
       const result = await picolabApi.checkStep({
         problemId: currentProblem?.id ?? 'mock-problem-final-velocity',
         stepId: 'step-2',
-        studentInput: 'v = 10 m',
+        studentInput: step2Input,
       });
 
       if (result.ok) {
@@ -142,6 +143,10 @@ export function SmartNotebookPage() {
 
       <div className="grid gap-5 xl:grid-cols-[240px_minmax(0,1fr)_260px]">
         <aside className="min-w-0">
+          <div className="mb-4">
+            <div className="text-[20px] font-extrabold tracking-[-0.03em] text-pico-text">Problem</div>
+            <p className="mt-1 text-[13px] leading-relaxed text-pico-muted">Setup and known values.</p>
+          </div>
           <ProblemContextPanel problem={notebookProblem} />
         </aside>
 
@@ -163,6 +168,8 @@ export function SmartNotebookPage() {
                 onOpenVisual={openVisualLab}
                 onCheckStep={step.status === 'learning-signal' ? checkCurrentStep : undefined}
                 checkPending={step.status === 'learning-signal' && checkPending}
+                editableStudentInput={step.status === 'learning-signal' ? step2Input : undefined}
+                onStudentInputChange={step.status === 'learning-signal' ? setStep2Input : undefined}
               />
             ))}
           </div>
@@ -223,6 +230,10 @@ export function SmartNotebookPage() {
         </section>
 
         <aside className="min-w-0">
+          <div className="mb-4">
+            <div className="text-[20px] font-extrabold tracking-[-0.03em] text-pico-text">Pico</div>
+            <p className="mt-1 text-[13px] leading-relaxed text-pico-muted">Coaching as you solve.</p>
+          </div>
           <PicoCoachPanel
             title={mockPicoCoach.title}
             message={mockPicoCoach.message}

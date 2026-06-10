@@ -54,7 +54,7 @@ export function LearningSignalCard({
 
       <div className="flex flex-wrap items-center gap-2 pt-0.5">
         <Button variant="coral" size="sm" onClick={onCheckStep} disabled={checkPending}>
-          {checkPending ? 'Pico is checking...' : 'Adjust this step'}
+          {checkPending ? 'Pico is checking...' : 'Check this step'}
         </Button>
         <Button variant="secondary" size="sm" onClick={onOpenVisual}>
           <Sparkles size={13} />
