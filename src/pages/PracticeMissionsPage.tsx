@@ -1,4 +1,3 @@
-import { Play } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DailyChallengeCard } from '../components/practice/DailyChallengeCard';
@@ -8,8 +7,6 @@ import { PracticeCoachPanel } from '../components/practice/PracticeCoachPanel';
 import { RandomMissionCard } from '../components/practice/RandomMissionCard';
 import { PageHeader } from '../components/layout/PageHeader';
 import { AskPicoDrawer } from '../components/pico/AskPicoDrawer';
-import { Badge } from '../components/ui/Badge';
-import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { dailyChallenge, focusMission, randomMissions } from '../data/mockMissions';
 import { picolabApi } from '../services/picolabApi';
@@ -57,6 +54,10 @@ const localRandomPractice: PracticeMission[] = randomMissions.map((mission) => (
   rewardPicoPoints: mission.reward.points,
 }));
 
+const randomMissionDescriptions: Record<string, string | undefined> = Object.fromEntries(
+  randomMissions.map((mission) => [mission.id, mission.description]),
+);
+
 const toMissionCard = (mission: PracticeMission): Mission => ({
   id: mission.id,
   title: mission.title,
@@ -68,6 +69,7 @@ const toMissionCard = (mission: PracticeMission): Mission => ({
     label: `+${mission.rewardPicoPoints} PicoPoints`,
     points: mission.rewardPicoPoints,
   },
+  description: randomMissionDescriptions[mission.id],
 });
 
 const toPracticeQuestion = (mission: PracticeMission): PracticeQuestion => ({
@@ -301,23 +303,21 @@ export function PracticeMissionsPage() {
     navigate('/visual-lab');
   };
 
+  const coachStats = useMemo(
+    () => [
+      { label: "Today's reward", value: `+${focusPracticeMission.rewardPicoPoints} PicoPoints` },
+      { label: 'Current streak', value: `${progress.streak} days` },
+      { label: 'Focus area', value: 'Units in motion' },
+    ],
+    [focusPracticeMission.rewardPicoPoints, progress.streak],
+  );
+
   return (
     <div className="p-fade">
       <PageHeader
         eyebrow="Practice"
         title="Practice Missions"
-        subtitle="Short exercises designed around your current focus area."
-        actions={
-          <>
-            <Badge variant="yellow">Focus: Units in motion</Badge>
-            <Badge variant="green">{progress.picoPoints} PicoPoints</Badge>
-            <Badge variant="blue">{progress.streak}-day streak</Badge>
-            <Button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <Play size={15} />
-              Start daily challenge
-            </Button>
-          </>
-        }
+        subtitle="Start with today's challenge, strengthen your current focus, then add optional practice for extra PicoPoints."
       />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
@@ -331,6 +331,10 @@ export function PracticeMissionsPage() {
           ) : null}
 
           <section className="mb-6">
+            <div className="mb-2.5 flex items-baseline gap-2">
+              <span className="p-section-lbl">Start here</span>
+              <span className="text-[12px] text-pico-muted">Step 1 · today's recommended practice</span>
+            </div>
             <DailyChallengeCard
               mission={dailyMission}
               title="Daily Challenge"
@@ -341,6 +345,10 @@ export function PracticeMissionsPage() {
           </section>
 
           <section className="mb-6">
+            <div className="mb-2.5 flex items-baseline gap-2">
+              <span className="p-section-lbl">Your current focus</span>
+              <span className="text-[12px] text-pico-muted">Step 2 · the skill Pico wants you to strengthen</span>
+            </div>
             <FocusMissionCard
               selectedOptionId={selectedOptionId}
               checked={checked}
@@ -373,20 +381,17 @@ export function PracticeMissionsPage() {
           ) : null}
 
           <section>
-            <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-[18px] font-extrabold tracking-[-0.02em] text-pico-text">
-                  Random Missions
-                </h2>
-                <p className="mt-1 text-[13px] leading-relaxed text-pico-secondary">
-                  Keep practicing after the daily challenge and earn extra PicoPoints.
-                </p>
-              </div>
-              <Card variant="blue" className="w-fit px-3 py-2">
-                <span className="text-[12px] font-semibold text-[#2A60A8]">
-                  Previewing: {randomPreview}
-                </span>
-              </Card>
+            <div className="mb-3">
+              <span className="p-section-lbl">Optional extra practice</span>
+              <span className="ml-2 text-[12px] text-pico-muted">Step 3 · pick another short mission for extra PicoPoints</span>
+            </div>
+            <div className="mb-4 flex flex-col gap-1">
+              <h2 className="text-[18px] font-extrabold tracking-[-0.02em] text-pico-text">
+                Random Missions
+              </h2>
+              <p className="text-[13px] leading-relaxed text-pico-secondary">
+                Want extra practice? Choose a short mission below.
+              </p>
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
@@ -395,6 +400,7 @@ export function PracticeMissionsPage() {
                   key={mission.id}
                   mission={mission}
                   completed={progress.completedMissionIds.includes(mission.id)}
+                  selected={mission.title === randomPreview}
                   onStart={() => setRandomPreview(mission.title)}
                 />
               ))}
@@ -403,7 +409,7 @@ export function PracticeMissionsPage() {
         </main>
 
         <aside className="min-w-0">
-          <PracticeCoachPanel onAskPico={() => setAskPicoOpen(true)} />
+          <PracticeCoachPanel stats={coachStats} onAskPico={() => setAskPicoOpen(true)} />
         </aside>
       </div>
 

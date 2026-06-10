@@ -14,6 +14,7 @@ export type Mission = {
   topic: string;
   difficulty: MissionDifficulty;
   reward: MissionReward;
+  description?: string;
 };
 
 export type AnswerOption = {

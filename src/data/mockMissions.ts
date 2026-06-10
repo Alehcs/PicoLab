@@ -52,6 +52,7 @@ export const randomMissions: Mission[] = [
     topic: 'Functions',
     difficulty: 'Easy',
     reward: { label: '+10 PicoPoints', points: 10 },
+    description: 'Read a graph and decide what the slope is telling you.',
   },
   {
     id: 'velocity-vs-distance',
@@ -60,6 +61,7 @@ export const randomMissions: Mission[] = [
     topic: 'Motion graphs',
     difficulty: 'Medium',
     reward: { label: '+15 PicoPoints', points: 15 },
+    description: 'Tell velocity and distance apart from a motion graph.',
   },
   {
     id: 'algebra-sign-check',
@@ -68,6 +70,7 @@ export const randomMissions: Mission[] = [
     topic: 'Algebra',
     difficulty: 'Easy',
     reward: { label: '+10 PicoPoints', points: 10 },
+    description: 'Catch the sign slip before it changes the answer.',
   },
 ];
 

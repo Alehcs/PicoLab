@@ -3,11 +3,14 @@ import { AskPicoButton } from '../pico/AskPicoButton';
 import { PicoMascot } from '../pico/PicoMascot';
 import { Card } from '../ui/Card';
 
+type CoachStat = { label: string; value: string };
+
 type PracticeCoachPanelProps = {
   onAskPico: () => void;
+  stats?: CoachStat[];
 };
 
-export function PracticeCoachPanel({ onAskPico }: PracticeCoachPanelProps) {
+export function PracticeCoachPanel({ onAskPico, stats = practiceCoach.stats }: PracticeCoachPanelProps) {
   return (
     <Card className="flex flex-col gap-4 px-4 py-5">
       <div className="p-pico-coach-stack">
@@ -21,7 +24,7 @@ export function PracticeCoachPanel({ onAskPico }: PracticeCoachPanelProps) {
       <div className="h-px bg-pico-border" />
 
       <div className="grid gap-2">
-        {practiceCoach.stats.map((stat) => (
+        {stats.map((stat) => (
           <div key={stat.label} className="rounded-[10px] bg-pico-soft px-3.5 py-2.5">
             <div className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-pico-muted">
               {stat.label}
