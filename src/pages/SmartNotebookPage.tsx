@@ -1,4 +1,16 @@
-import { ArrowRight, Check, FlaskConical, Lightbulb, Map, RotateCcw, Sparkles } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  FlaskConical,
+  Home,
+  Lightbulb,
+  Map,
+  Plus,
+  Route,
+  RotateCcw,
+  Sparkles,
+  Target,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NotebookStepCard, type StepAction, type StepPhase } from '../components/notebook/NotebookStepCard';
@@ -7,6 +19,7 @@ import { ProblemContextPanel } from '../components/notebook/ProblemContextPanel'
 import { AskPicoDrawer } from '../components/pico/AskPicoDrawer';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import {
   mockNotebookProblem,
@@ -88,6 +101,7 @@ export function SmartNotebookPage() {
   const [step2Hint, setStep2Hint] = useState(false);
   const [step3Prompt, setStep3Prompt] = useState<string | null>(null);
   const [growthToast, setGrowthToast] = useState(false);
+  const [notebookComplete, setNotebookComplete] = useState(false);
   const toastTimer = useRef<number>();
 
   useEffect(() => {
@@ -123,6 +137,9 @@ export function SmartNotebookPage() {
 
   const viewGrowthMap = () => navigate('/growth-map');
   const viewGrowthPath = () => navigate('/growth-path');
+  const practiceSkill = () => navigate('/practice-missions');
+  const addAnotherProblem = () => navigate('/add-problem');
+  const backToHome = () => navigate('/');
 
   // --- Step 1: formula / setup -------------------------------------------------
   const checkStep1 = () => {
@@ -221,10 +238,10 @@ export function SmartNotebookPage() {
 
   const continueToStep4 = () => setStatuses((prev) => ({ ...prev, 4: 'active' }));
 
-  // --- Step 4: visual connection ----------------------------------------------
-  const openVisualLabFromStep4 = () => {
+  // --- Step 4: visual connection + completion ---------------------------------
+  const finishProblem = () => {
     setStatuses((prev) => ({ ...prev, 4: 'completed' }));
-    openVisualLab();
+    setNotebookComplete(true);
   };
 
   // --- Derived view ------------------------------------------------------------
@@ -392,12 +409,26 @@ export function SmartNotebookPage() {
           label: 'Open Visual Lab',
           variant: 'primary',
           icon: <FlaskConical size={14} />,
-          onClick: openVisualLabFromStep4,
+          onClick: openVisualLab,
+        },
+        {
+          key: 'finish',
+          label: 'Finish problem',
+          variant: 'secondary',
+          icon: <Check size={14} />,
+          onClick: finishProblem,
         },
       ];
     }
     return [];
   };
+
+  const completionSummary = [
+    { label: 'Final result', value: '10 m/s' },
+    { label: 'Learning signal', value: 'The final unit needs attention' },
+    { label: 'Suggested focus', value: 'Unit reasoning' },
+    { label: 'Suggested visual', value: 'Units' },
+  ];
 
   return (
     <div className="p-fade">
@@ -514,6 +545,65 @@ export function SmartNotebookPage() {
               actions={step4Actions()}
             />
           </div>
+
+          {notebookComplete ? (
+            <Card className="p-fade mt-4 border-[#BBE3CC] ring-1 ring-[#BBE3CC]">
+              <div className="flex items-start gap-3 border-b border-pico-soft px-5 py-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pico-softGreen text-[#2A7850]">
+                  <Check size={18} aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[17px] font-extrabold tracking-[-0.02em] text-pico-text">
+                    Problem complete
+                  </div>
+                  <p className="mt-1 text-[13px] leading-relaxed text-pico-secondary">
+                    Pico saved the key learning signal and prepared your next practice options.
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-5 py-4">
+                <div className="grid gap-2.5 sm:grid-cols-2">
+                  {completionSummary.map((item) => (
+                    <div key={item.label} className="rounded-[11px] bg-pico-soft px-3.5 py-2.5">
+                      <div className="p-section-lbl mb-1">{item.label}</div>
+                      <div className="text-[13.5px] font-bold text-pico-text">{item.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4">
+                  <div className="p-section-lbl mb-2.5">What would you like to do next?</div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="primary" size="sm" onClick={practiceSkill}>
+                      <Target size={14} />
+                      Practice this skill
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={openVisualLab}>
+                      <FlaskConical size={14} />
+                      Open Visual Lab
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={viewGrowthMap}>
+                      <Map size={14} />
+                      View Growth Map
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={viewGrowthPath}>
+                      <Route size={14} />
+                      View Roadmap
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={addAnotherProblem}>
+                      <Plus size={14} />
+                      Add another problem
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={backToHome}>
+                      <Home size={14} />
+                      Back to Home
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ) : null}
         </section>
 
         <aside className="min-w-0">

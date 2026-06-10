@@ -49,7 +49,7 @@ export function PicoCoachPanel({
 
       <div className="flex flex-col gap-2">
         <Button variant="secondary" size="sm" fullWidth onClick={onReviewPattern}>
-          Review pattern
+          View Growth Map
         </Button>
         <Button variant="ghost" size="sm" fullWidth onClick={onViewGrowthPath}>
           View Roadmap
