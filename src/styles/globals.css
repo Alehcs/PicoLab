@@ -389,9 +389,12 @@
   }
 
   .p-speech-bubble {
+    --pico-bubble-bg: #fffefa;
     position: relative;
+    border: 1.5px solid var(--pico-border);
     border-radius: 12px;
-    background: var(--pico-soft);
+    background: var(--pico-bubble-bg);
+    box-shadow: 0 8px 20px rgba(38, 50, 56, 0.06);
   }
 
   .p-speech-bubble::before {
@@ -400,9 +403,33 @@
     left: 50%;
     width: 16px;
     height: 16px;
-    background: var(--pico-soft);
+    border-left: 1.5px solid var(--pico-border);
+    border-top: 1.5px solid var(--pico-border);
+    background: var(--pico-bubble-bg);
     content: "";
     transform: translateX(-50%) rotate(45deg);
+  }
+
+  .p-speech-bubble-left::before {
+    top: 22px;
+    left: -8px;
+    transform: rotate(-45deg);
+  }
+
+  .p-pico-coach-stack {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  @media (min-width: 640px) {
+    .p-speech-bubble-responsive-left::before {
+      top: 22px;
+      left: -8px;
+      transform: rotate(-45deg);
+    }
   }
 }
 

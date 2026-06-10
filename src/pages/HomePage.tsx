@@ -48,7 +48,7 @@ export function HomePage() {
                 <Target size={15} />
                 Start a mission
               </Button>
-              <Button variant="secondary" onClick={() => navigate('/smart-notebook')}>
+              <Button variant="secondary" onClick={() => navigate('/add-problem')}>
                 Try sample problem
               </Button>
             </div>
@@ -104,17 +104,12 @@ export function HomePage() {
       </section>
 
       <aside className="flex shrink-0 flex-col gap-[18px] border-pico-border bg-white p-4 xl:w-56 xl:overflow-y-auto xl:border-l-[1.5px] xl:px-4 xl:py-[22px]">
-        <div className="flex flex-col items-center gap-1.5 border-b-[1.5px] border-pico-border pb-4">
-          <PicoMascot size={72} />
-          <div className="text-[11px] font-bold uppercase tracking-[0.06em] text-pico-muted">
-            Pico
+        <div className="p-pico-coach-stack">
+          <PicoMascot size={142} className="max-w-[82%]" />
+          <div className="p-speech-bubble w-full px-4 py-3.5 text-[13.5px] leading-[1.65] text-pico-secondary">
+            <div className="p-section-lbl mb-1.5">Pico says</div>
+            “Mistakes are useful here. I’ll help you turn each one into a learning signal.”
           </div>
-        </div>
-
-        <div className="text-[13.5px] font-bold text-pico-secondary">Pico's note</div>
-
-        <div className="p-speech-bubble px-3.5 py-3 text-[13.5px] leading-[1.65] text-pico-secondary">
-          “Mistakes are useful here. I’ll help you turn each one into a learning signal.”
         </div>
 
         <div className="p-divider" />

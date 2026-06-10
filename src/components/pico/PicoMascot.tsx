@@ -12,7 +12,7 @@ export function PicoMascot({ size = 56, className, style, decorative = false }: 
     <img
       src="/assets/pico-professor.png"
       width={size}
-      height={Math.round(size * 1.32)}
+      height={size}
       alt={decorative ? '' : 'Pico, the African grey parrot learning coach'}
       className={`object-contain ${className ?? ''}`}
       style={{ flexShrink: 0, ...style }}

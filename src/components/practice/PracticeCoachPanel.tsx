@@ -10,16 +10,10 @@ type PracticeCoachPanelProps = {
 export function PracticeCoachPanel({ onAskPico }: PracticeCoachPanelProps) {
   return (
     <Card className="flex flex-col gap-4 px-4 py-5">
-      <div className="flex flex-col items-center gap-1.5 border-b border-pico-border pb-4">
-        <PicoMascot size={54} />
-        <div className="text-[11px] font-bold uppercase tracking-[0.06em] text-pico-muted">
-          Pico
-        </div>
-      </div>
-
-      <div>
-        <div className="text-[13.5px] font-bold text-pico-secondary">{practiceCoach.title}</div>
-        <div className="p-speech-bubble mt-2 px-3.5 py-3 text-[13px] leading-relaxed text-pico-secondary">
+      <div className="p-pico-coach-stack">
+        <PicoMascot size={132} className="max-w-[78%]" />
+        <div className="p-speech-bubble w-full px-4 py-3.5 text-[13px] leading-relaxed text-pico-secondary">
+          <div className="p-section-lbl mb-1.5">Pico says</div>
           {practiceCoach.message}
         </div>
       </div>

@@ -220,11 +220,11 @@ export function GrowthMapPage() {
       </section>
 
       <Card className="px-5 py-5">
-        <div className="flex items-start gap-4">
-          <PicoMascot size={52} />
-          <div>
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+          <PicoMascot size={118} className="max-w-[150px] sm:max-w-[118px]" />
+          <div className="p-speech-bubble p-speech-bubble-responsive-left min-w-0 flex-1 px-4 py-3.5">
             <div className="p-section-lbl mb-2">Pico insight</div>
-            <p className="max-w-3xl text-[14px] leading-relaxed text-pico-secondary">
+            <p className="text-[14px] leading-relaxed text-pico-secondary">
               {growthMap.picoInsight}
             </p>
           </div>

@@ -20,11 +20,14 @@ export function QuoteCard({ quote, onNewQuote }: QuoteCardProps) {
         <div className="mt-3 text-[13px] font-medium text-pico-secondary">{quote.author}</div>
       </div>
 
-      <div className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center">
-        <PicoMascot size={42} />
-        <p className="min-w-0 flex-1 text-[13.5px] italic leading-relaxed text-pico-secondary">
-          {quote.note}
-        </p>
+      <div className="flex flex-col items-center gap-3 px-1 sm:flex-row sm:items-center">
+        <PicoMascot size={96} className="max-w-[120px] sm:max-w-[96px]" />
+        <div className="p-speech-bubble p-speech-bubble-responsive-left min-w-0 flex-1 px-4 py-3.5">
+          <div className="p-section-lbl mb-1.5">Pico says</div>
+          <p className="text-[13.5px] italic leading-relaxed text-pico-secondary">
+            {quote.note}
+          </p>
+        </div>
         <Button variant="secondary" size="sm" onClick={onNewQuote}>
           <RefreshCw size={13} />
           New quote

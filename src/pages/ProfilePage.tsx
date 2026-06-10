@@ -272,9 +272,10 @@ export function ProfilePage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-[14px] bg-pico-soft p-4 sm:flex-row sm:items-start">
-            <PicoMascot size={36} />
-            <div className="min-w-0 flex-1">
+          <div className="flex flex-col items-center gap-3 rounded-[14px] bg-pico-soft p-4 sm:flex-row sm:items-start">
+            <PicoMascot size={92} className="max-w-[120px] sm:max-w-[92px]" />
+            <div className="p-speech-bubble p-speech-bubble-responsive-left min-w-0 flex-1 px-4 py-3.5">
+              <div className="p-section-lbl mb-1.5">Pico says</div>
               <p className="text-[13.5px] italic leading-relaxed text-pico-text">
                 {syncedProgressSummary.picoInsight}
               </p>
