@@ -1,6 +1,6 @@
 # Mock Diagnostic Engine
 
-The mock diagnostic engine turns structured evidence into one or more `LearningSignalInstance` records. It is deterministic and uses the Phase 11G taxonomy. It makes Smart Notebook, Practice Missions, Growth Map, Growth Path, Profile, and Visual Lab suggestions speak the same learning-science language before any real AI integration.
+The mock diagnostic engine turns structured evidence into one or more `LearningSignalInstance` records. It is deterministic and uses the Phase 11G taxonomy. It makes Smart Notebook, Practice Missions, Growth Map, Roadmap, Profile, and Visual Lab suggestions speak the same learning-science language before any real AI integration.
 
 ## What It Does
 

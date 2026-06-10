@@ -73,7 +73,7 @@ Browser console reset snippet:
 - [ ] Practice check-answer returns feedback and diagnostic fields
 - [ ] Visual Lab opens a suggested template after a diagnostic signal
 - [ ] Growth Map shows learning signal context
-- [ ] Growth Path shows a recommended next focus
+- [ ] Roadmap shows a recommended next focus
 - [ ] Profile shows PicoPoints, streak, badges, and progress
 
 ## Demo Notes

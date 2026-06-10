@@ -431,7 +431,7 @@ function TemplateCoachPanel({
           {info.practiceLabel}
         </Button>
         <Button variant="ghost" size="sm" fullWidth onClick={onViewGrowthPath}>
-          View Growth Path
+          View Roadmap
         </Button>
       </div>
     </Card>

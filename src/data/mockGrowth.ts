@@ -103,7 +103,7 @@ export const growthMapSuggestedDirection = {
   title: 'Suggested direction',
   content:
     'Based on your recent learning signals, your best next focus is Units in motion.',
-  cta: 'Continue in Growth Path',
+  cta: 'Continue in Roadmap',
   route: '/growth-path',
 };
 
@@ -118,7 +118,7 @@ export const currentGrowthGoal = {
 
 export const growthPathProgress = {
   percent: 65,
-  label: '65% of current path completed',
+  label: '65% of current roadmap completed',
   detail: '2 of 3 focus areas completed',
 };
 

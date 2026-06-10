@@ -616,7 +616,7 @@ const normalizeGrowthPathStep = (
         ? value.reason
         : status === 'recommended'
           ? 'This is the clearest next step from recent learning signals.'
-          : 'This supports your current learning path.',
+          : 'This supports your current roadmap.',
     items: Array.isArray(value.items)
       ? value.items.filter((item): item is string => typeof item === 'string')
       : [title],
@@ -1082,7 +1082,7 @@ const getGrowthPathWithFallback = async (): Promise<ApiResult<GrowthPathResponse
     }
   }
 
-  return fallbackWithWarning('Growth Path', backendResult, activeApi.getGrowthPath());
+  return fallbackWithWarning('Roadmap', backendResult, activeApi.getGrowthPath());
 };
 
 const regenerateGrowthPathWithFallback = async (
@@ -1105,7 +1105,7 @@ const regenerateGrowthPathWithFallback = async (
   }
 
   return fallbackWithWarning(
-    'Growth Path regenerate',
+    'Roadmap regenerate',
     backendResult,
     activeApi.regenerateGrowthPath(request),
   );

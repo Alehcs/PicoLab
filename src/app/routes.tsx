@@ -49,7 +49,7 @@ export const appRoutes: AppRoute[] = [
   },
   { path: '/visual-lab', label: 'Visual Lab', icon: FlaskConical, element: <VisualLabPage /> },
   { path: '/growth-map', label: 'Growth Map', icon: Map, element: <GrowthMapPage /> },
-  { path: '/growth-path', label: 'Growth Path', icon: Route, element: <GrowthPathPage /> },
+  { path: '/growth-path', label: 'Roadmap', icon: Route, element: <GrowthPathPage /> },
   {
     path: '/practice-missions',
     label: 'Practice Missions',

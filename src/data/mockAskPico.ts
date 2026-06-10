@@ -55,16 +55,16 @@ export const askPicoContexts: Record<AskPicoContext, AskPicoContextData> = {
     mockResponse:
       'Your formula choice is strong. The repeated signal is mostly about matching the final unit to the physical quantity.',
     actions: [
-      { label: 'View Growth Path', route: '/growth-path' },
+      { label: 'View Roadmap', route: '/growth-path' },
       { label: 'Practice units', route: '/practice-missions' },
     ],
   },
   'growth-path': {
-    title: 'Ask Pico about your path',
-    contextLabel: 'Growth Path',
-    contextNote: 'Pico is looking at your current learning path.',
+    title: 'Ask Pico about your roadmap',
+    contextLabel: 'Roadmap',
+    contextNote: 'Pico is looking at your current roadmap.',
     storageKey: 'growthPath',
-    inputPlaceholder: 'Ask about your learning path...',
+    inputPlaceholder: 'Ask about your roadmap...',
     suggestedQuestions: [
       'Why is units in motion first?',
       'Explain simpler',
@@ -94,7 +94,7 @@ export const askPicoContexts: Record<AskPicoContext, AskPicoContextData> = {
       'A useful way to check is to multiply only the units first: m/s² · s leaves m/s. That tells you the result is velocity.',
     actions: [
       { label: 'Open Visual Lab', route: '/visual-lab' },
-      { label: 'View Growth Path', route: '/growth-path' },
+      { label: 'View Roadmap', route: '/growth-path' },
     ],
   },
   profile: {
@@ -113,7 +113,7 @@ export const askPicoContexts: Record<AskPicoContext, AskPicoContextData> = {
       'You are close to Wing League. A daily challenge plus one focus mission would move you forward while reinforcing your current goal.',
     actions: [
       { label: 'Start daily challenge', route: '/practice-missions' },
-      { label: 'View Growth Path', route: '/growth-path' },
+      { label: 'View Roadmap', route: '/growth-path' },
     ],
   },
   settings: {

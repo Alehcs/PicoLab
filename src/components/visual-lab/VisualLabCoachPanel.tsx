@@ -71,7 +71,7 @@ export function VisualLabCoachPanel({
           Practice units
         </Button>
         <Button variant="ghost" size="sm" fullWidth onClick={onViewGrowthPath}>
-          View Growth Path
+          View Roadmap
         </Button>
       </div>
     </Card>

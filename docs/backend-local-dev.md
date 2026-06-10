@@ -114,4 +114,4 @@ Connected frontend flows call backend endpoints first and fall back to local moc
 VITE_PICOLAB_API_URL=http://127.0.0.1:8787/api
 ```
 
-Backend-first fallback currently covers Ask Pico, problem parse/scan/confirm, Smart Notebook step checking, Practice Missions, Growth Map, Growth Path, Profile, and Visual Lab suggestions.
+Backend-first fallback currently covers Ask Pico, problem parse/scan/confirm, Smart Notebook step checking, Practice Missions, Growth Map, Roadmap, Profile, and Visual Lab suggestions.

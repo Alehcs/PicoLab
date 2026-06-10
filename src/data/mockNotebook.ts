@@ -127,5 +127,5 @@ export const mockPicoCoach = {
 export const mockPatternInsight: PatternInsight = {
   title: 'Pattern insight',
   content: 'Unit mismatch · noticed 3 times',
-  supportCopy: 'This may become a focus area in your Growth Path.',
+  supportCopy: 'This may become a focus area in your Roadmap.',
 };

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { primarySidebarRoutes } from '../../app/routes';
-import { PicoMascot } from '../pico/PicoMascot';
+import { AppLogo } from '../pico/AppLogo';
 import { Sidebar } from './Sidebar';
 
 type AppShellProps = {
@@ -16,7 +16,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className="p-content flex-col">
         <header className="border-b-[1.5px] border-pico-border bg-white px-4 py-3 md:hidden">
           <div className="flex items-center gap-2.5">
-            <PicoMascot size={30} />
+            <AppLogo size={32} />
             <div>
               <div className="text-[15px] font-extrabold leading-none tracking-[-0.02em] text-pico-text">
                 PicoLab

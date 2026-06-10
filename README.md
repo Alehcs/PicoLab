@@ -2,13 +2,13 @@
 
 **A visual AI learning coach that turns STEM mistakes into learning signals.**
 
-PicoLab helps students solve math and physics problems step by step. It detects learning signals from mistakes, then connects those signals across Smart Notebook, Visual Lab, Growth Map, Growth Path, Practice Missions, Profile, and Ask Pico.
+PicoLab helps students solve math and physics problems step by step. It detects learning signals from mistakes, then connects those signals across Smart Notebook, Visual Lab, Growth Map, Roadmap, Practice Missions, Profile, and Ask Pico.
 
 Ask Pico is contextual support inside the learning flow, not a chatbot-first experience. It uses the current page, problem state, and learning context to give short coaching nudges.
 
 ## Core Value Proposition
 
-**PicoLab turns mistakes into learning signals through visual STEM practice, contextual AI coaching, and personalized growth paths.**
+**PicoLab turns mistakes into learning signals through visual STEM practice, contextual AI coaching, and personalized roadmaps.**
 
 ## Features
 
@@ -25,7 +25,7 @@ Ask Pico is contextual support inside the learning flow, not a chatbot-first exp
 - Learning Signal Taxonomy
 - Mock Diagnostic Engine
 - Growth Map
-- Growth Path
+- Roadmap
 - Practice Missions
 - PicoPoints, streaks, and badges
 - Profile progress
@@ -104,7 +104,7 @@ The default frontend API URL is `http://127.0.0.1:8787/api`. If the backend is n
 6. Visual Lab: open the recommended visual template.
 7. Practice Missions: answer a mission and complete it.
 8. Growth Map: show learning signals.
-9. Growth Path: show the recommended next focus.
+9. Roadmap: show the recommended next focus.
 10. Profile: show PicoPoints, streak, badges, and progress.
 
 Suggested sample problem:

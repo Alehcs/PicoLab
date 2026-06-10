@@ -281,7 +281,7 @@ export function ProfilePage() {
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => navigate('/growth-path')}>
                   <Route size={13} />
-                  View Growth Path
+                  View Roadmap
                 </Button>
                 <Button variant="secondary" size="sm" onClick={() => navigate('/practice-missions')}>
                   Start next mission

@@ -38,7 +38,7 @@ Explain that visual practice helps students see why a unit, sign, graph, or form
 
 Go to Practice Missions and answer a mission. Show PicoPoints, mission completion, and local progress.
 
-Then open Growth Map. The same learning signal now appears as part of a supportive diagnostic view. Open Growth Path to show the recommended next focus, then Profile to show streaks, badges, and progress.
+Then open Growth Map. The same learning signal now appears as part of a supportive diagnostic view. Open Roadmap to show the recommended next focus, then Profile to show streaks, badges, and progress.
 
 ## Why This Matters
 

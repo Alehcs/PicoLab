@@ -10,7 +10,7 @@ PicoLab remains a visual learning product first. Ask Pico is contextual support,
 - Add clear contracts for future backend work.
 - Make AI responsibilities explicit and provider-agnostic.
 - Support route-by-route integration instead of a large rewrite.
-- Preserve PicoLab language: learning signal, growth path, practice mission, PicoPoints, supportive explanation, visual template.
+- Preserve PicoLab language: learning signal, roadmap, practice mission, PicoPoints, supportive explanation, visual template.
 - Avoid punitive feedback and answer-only tutoring.
 
 ## Backend Responsibilities
@@ -35,9 +35,9 @@ The backend and frontend service layer select Visual Lab templates based on the 
 
 The mock backend and local persistence aggregate learning signals, detect repeated patterns, track improvement, and recommend the next focus. Growth Map remains diagnostic and supportive.
 
-### Growth Path
+### Roadmap
 
-The mock backend and local persistence generate a personalized roadmap from learner goals and learning signals. Growth Path updates recommendations from current signals.
+The mock backend and local persistence generate a personalized roadmap from learner goals and learning signals. Roadmap updates recommendations from current signals.
 
 ### Practice Missions
 

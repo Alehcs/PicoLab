@@ -58,7 +58,7 @@ export function PicoCoachPanel({
           Review pattern
         </Button>
         <Button variant="ghost" size="sm" fullWidth onClick={onViewGrowthPath}>
-          View Growth Path
+          View Roadmap
         </Button>
         <AskPicoButton fullWidth onClick={onAskPico} />
       </div>

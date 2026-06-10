@@ -65,13 +65,13 @@ Status: complete with backend-first local fallback.
 
 - Store learning signals from notebook and practice events.
 - Update Growth Map from persisted signals.
-- Update Growth Path recommendations from current signals.
+- Update Roadmap recommendations from current signals.
 - Sync Profile progress from local learning and practice events.
 
 Success criteria:
 
 - Learning signals can flow from Step Check to Growth Map.
-- Growth Path can recommend the next focus.
+- Roadmap can recommend the next focus.
 - Profile can summarize recent activity from stored events.
 
 Status: complete with backend-first local fallback.
@@ -80,7 +80,7 @@ Status: complete with backend-first local fallback.
 
 - Add the Learning Signal Taxonomy.
 - Add the deterministic mock diagnostic engine.
-- Enrich Growth Map, Growth Path, and Profile from diagnostic signals.
+- Enrich Growth Map, Roadmap, and Profile from diagnostic signals.
 - Prepare Visual Lab suggestions from signal definitions.
 
 Status: complete.
@@ -112,6 +112,6 @@ Success criteria:
 2. Add backend mock endpoints.
 3. Connect Ask Pico first because it is visible and high-impact.
 4. Connect problem parse and step check next.
-5. Connect Practice, Growth Map, Growth Path, and Profile with backend-first local fallback.
+5. Connect Practice, Growth Map, Roadmap, and Profile with backend-first local fallback.
 6. Activate Visual Lab templates from diagnostic suggestions.
 7. Add real AI provider only after mock contracts are proven.

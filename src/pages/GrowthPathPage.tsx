@@ -93,7 +93,7 @@ export function GrowthPathPage() {
         }
       } catch {
         if (import.meta.env?.DEV) {
-          console.warn('Growth Path backend unavailable; using local fallback.');
+          console.warn('Roadmap backend unavailable; using local fallback.');
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -136,7 +136,7 @@ export function GrowthPathPage() {
       }
     } catch {
       if (import.meta.env?.DEV) {
-        console.warn('Growth Path regenerate unavailable; keeping local roadmap.');
+        console.warn('Roadmap regenerate unavailable; keeping local roadmap.');
       }
     } finally {
       setRegenerating(false);
@@ -159,7 +159,7 @@ export function GrowthPathPage() {
     <div className="p-fade">
       <PageHeader
         eyebrow="Personalized roadmap"
-        title="Growth Path"
+        title="Roadmap"
         subtitle="A personalized path built from your learning signals."
         actions={
           <>
@@ -196,7 +196,7 @@ export function GrowthPathPage() {
       <div className="mb-7">
         <RoadmapProgressCard
           percent={pathProgress}
-          label={`${pathProgress}% of current path completed`}
+          label={`${pathProgress}% of current roadmap completed`}
           detail={
             localProgress.completedMissionIds.length
               ? 'Progress updated from recent practice.'
@@ -267,7 +267,7 @@ export function GrowthPathPage() {
               </div>
             </div>
             <div className="mt-4">
-              <div className="text-[13.5px] font-bold text-pico-secondary">Pico plan</div>
+              <div className="text-[13.5px] font-bold text-pico-secondary">Pico Roadmap</div>
               <div className="p-speech-bubble mt-2 px-3.5 py-3 text-[13px] leading-relaxed text-pico-secondary">
                 {growthPath.picoPlan}
               </div>

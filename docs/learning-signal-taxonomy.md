@@ -1,12 +1,12 @@
 # Learning Signal Taxonomy
 
-PicoLab uses learning signals to describe evidence about what a learner may need next. A signal is not a judgment about the learner. It is a structured, supportive clue that helps Pico choose feedback, practice, visual support, Growth Map language, and Growth Path priorities.
+PicoLab uses learning signals to describe evidence about what a learner may need next. A signal is not a judgment about the learner. It is a structured, supportive clue that helps Pico choose feedback, practice, visual support, Growth Map language, and Roadmap priorities.
 
 ## Language Model
 
 - Mistake: an observed mismatch between the learner's work and the expected reasoning. This word is useful internally, but Pico should avoid leading with it in student-facing copy.
 - Learning signal: a supportive interpretation of evidence, such as a final unit needing attention or a graph slope needing support.
-- Growth area: a cluster of repeated or high-priority learning signals that belongs on the Growth Map or Growth Path.
+- Growth area: a cluster of repeated or high-priority learning signals that belongs on the Growth Map or Roadmap.
 - Practice recommendation: a next action selected from the signal definition, such as Unit reasoning or Formula chooser.
 
 Student-facing copy should prefer words like learning signal, adjustment, needs attention, useful signal, growth area, evidence, next practice, visual support, and supportive feedback.
@@ -35,11 +35,11 @@ Each definition includes:
 - Supportive feedback
 - Suggested practice missions
 - Optional Visual Lab template
-- Growth Path focus areas
+- Roadmap focus areas
 
 Runtime instances add severity, status, confidence, evidence, source, timestamp, and optional problem/step references.
 
-Current demo persistence stores generated instances locally so Smart Notebook, Practice Missions, Growth Map, Growth Path, Profile, and Visual Lab can share the same signal context without auth or a database.
+Current demo persistence stores generated instances locally so Smart Notebook, Practice Missions, Growth Map, Roadmap, Profile, and Visual Lab can share the same signal context without auth or a database.
 
 ## Product Mapping
 
@@ -57,8 +57,8 @@ Practice can use a signal ID to choose a mission family. `units.unit_cancellatio
 Growth Map:
 Growth Map should remain diagnostic. It can group repeated instances by category, show signal strength, and avoid roadmap language except for light next actions.
 
-Growth Path:
-Growth Path should translate repeated or prioritized signals into roadmap focus areas. For example, `formula.rearrangement_issue` can contribute to Formula rearrangement and Algebra fluency.
+Roadmap:
+Roadmap should translate repeated or prioritized signals into roadmap focus areas. For example, `formula.rearrangement_issue` can contribute to Formula rearrangement and Algebra fluency.
 
 Profile:
 Profile can show aggregate progress, such as improved learning signals and badges, without becoming the diagnostic view.
@@ -94,7 +94,7 @@ Completed demo behavior:
 
 1. Notebook and practice evidence can become `LearningSignalInstance` records.
 2. Mixed signals are supported by the deterministic mock engine.
-3. Growth Map, Growth Path, and Profile can consume locally persisted signals.
+3. Growth Map, Roadmap, and Profile can consume locally persisted signals.
 4. Practice Missions and Visual Lab can use `suggestedPractice` and `suggestedVisualTemplate`.
 5. Student-facing feedback stays supportive even when internal evidence comes from a mismatch.
 

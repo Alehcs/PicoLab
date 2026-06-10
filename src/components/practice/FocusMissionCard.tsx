@@ -142,7 +142,7 @@ export function FocusMissionCard({
         </Button>
         <Button variant="ghost" onClick={onViewGrowthPath}>
           <Route size={14} />
-          View Growth Path
+          View Roadmap
         </Button>
       </div>
     </Card>

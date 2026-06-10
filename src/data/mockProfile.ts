@@ -169,7 +169,7 @@ export const mockActivity: ActivityItem[] = [
   },
   {
     id: 'started-growth-path',
-    label: 'Started Growth Path',
+    label: 'Started Roadmap',
     detail: 'Kinematics foundations',
     icon: 'route',
     variant: 'coral',

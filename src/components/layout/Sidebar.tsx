@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { footerSidebarRoutes, primarySidebarRoutes } from '../../app/routes';
-import { PicoMascot } from '../pico/PicoMascot';
+import { AppLogo } from '../pico/AppLogo';
 
 type SidebarProps = {
   compact?: boolean;
@@ -10,7 +10,7 @@ export function Sidebar({ compact = false }: SidebarProps) {
   return (
     <aside className={compact ? 'bg-white' : 'p-sidebar hidden flex-col md:flex'} aria-label="Primary">
       <NavLink to="/" className="flex items-center gap-2.5 px-2.5 pb-4 pt-1 no-underline">
-        <PicoMascot size={34} />
+        <AppLogo size={36} />
         <div>
           <div className="text-[15px] font-extrabold leading-none tracking-[-0.02em] text-pico-text">
             PicoLab

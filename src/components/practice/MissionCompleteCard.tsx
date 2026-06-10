@@ -53,7 +53,7 @@ export function MissionCompleteCard({
       <div className="mt-4 flex flex-wrap gap-2">
         <Button size="sm" onClick={onContinueGrowthPath}>
           <Route size={13} />
-          Continue Growth Path
+          Continue Roadmap
         </Button>
         <Button variant="secondary" size="sm" onClick={onTryRandomMission}>
           <Shuffle size={13} />

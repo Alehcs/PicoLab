@@ -113,11 +113,11 @@ Each endpoint should return `ApiResult<T>` on the frontend service layer. Backen
 
 ### GET `/api/growth-path`
 
-- Purpose: Return the learner's current growth path.
+- Purpose: Return the learner's current roadmap.
 - Request body: none
 - Response body: `GrowthPathResponse`
 - Frontend caller: `getGrowthPath`
-- Mock fallback: Return existing Growth Path mock data.
+- Mock fallback: Return existing Roadmap mock data.
 - AI dependency: Optional roadmap summary.
 
 ### POST `/api/growth-path/regenerate`

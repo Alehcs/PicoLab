@@ -182,7 +182,7 @@ const askPicoActionsByContext: Record<AskPicoContext, Array<{ label: string; rou
     { label: 'Practice units', route: '/practice-missions' },
   ],
   growthMap: [
-    { label: 'View Growth Path', route: '/growth-path' },
+    { label: 'View Roadmap', route: '/growth-path' },
     { label: 'Practice units', route: '/practice-missions' },
   ],
   growthPath: [
@@ -191,11 +191,11 @@ const askPicoActionsByContext: Record<AskPicoContext, Array<{ label: string; rou
   ],
   practice: [
     { label: 'Open Visual Lab', route: '/visual-lab' },
-    { label: 'View Growth Path', route: '/growth-path' },
+    { label: 'View Roadmap', route: '/growth-path' },
   ],
   profile: [
     { label: 'Start daily challenge', route: '/practice-missions' },
-    { label: 'View Growth Path', route: '/growth-path' },
+    { label: 'View Roadmap', route: '/growth-path' },
   ],
   settings: [],
 };
@@ -264,7 +264,7 @@ export const growthMap = {
   strengths: ['Formula setup', 'Substitution'],
   focusAreas: ['Units in motion', 'Velocity vs. distance'],
   suggestedDirection: {
-    label: 'Continue in Growth Path',
+    label: 'Continue in Roadmap',
     route: '/growth-path',
   },
   improvementTrend: 'Unit reasoning is becoming more consistent across recent practice.',

@@ -152,7 +152,7 @@ export function HomePage() {
           className="mt-auto"
           onClick={() => navigate('/growth-path')}
         >
-          View Growth Path
+          View Roadmap
           <ChevronRight size={13} />
         </Button>
       </aside>

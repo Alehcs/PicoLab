@@ -35,7 +35,7 @@ export function LearningGoalsCard({ goals, onEditGoals }: LearningGoalsCardProps
 
       <div className="mt-3 rounded-lg bg-pico-softBlue px-3 py-2">
         <p className="text-[11.5px] leading-relaxed text-[#2A60A8]">
-          Pico uses your goals to personalize your Growth Path and Practice Missions.
+          Pico uses your goals to personalize your Roadmap and Practice Missions.
         </p>
       </div>
     </Card>

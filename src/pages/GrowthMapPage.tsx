@@ -73,7 +73,7 @@ const signalActionByKind: Record<LearningSignal['kind'], GrowthSignal['bestNextA
   unitMismatch: { label: 'Practice units', route: '/practice-missions' },
   signSlip: { label: 'Practice algebra steps', route: '/practice-missions' },
   quantityConfusion: { label: 'Open visual comparison', route: '/visual-lab' },
-  formulaSelection: { label: 'Review Growth Path', route: '/growth-path' },
+  formulaSelection: { label: 'Review Roadmap', route: '/growth-path' },
   reasoningGap: { label: 'Open Smart Notebook', route: '/smart-notebook' },
   graphReading: { label: 'Open visual lesson', route: '/visual-lab' },
 };
