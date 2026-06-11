@@ -6,6 +6,7 @@ type AnswerOptionButtonProps = {
   selected: boolean;
   checked: boolean;
   correct: boolean;
+  letter?: string;
   onSelect: () => void;
 };
 
@@ -14,6 +15,7 @@ export function AnswerOptionButton({
   selected,
   checked,
   correct,
+  letter,
   onSelect,
 }: AnswerOptionButtonProps) {
   const stateClass = checked
@@ -34,13 +36,14 @@ export function AnswerOptionButton({
       aria-pressed={selected}
     >
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] bg-pico-soft text-[11px] font-bold text-pico-muted">
-        {option.id === 'meters'
-          ? 'A'
-          : option.id === 'meters-per-second'
-            ? 'B'
-            : option.id === 'meters-per-second-squared'
-              ? 'C'
-              : 'D'}
+        {letter ??
+          (option.id === 'meters'
+            ? 'A'
+            : option.id === 'meters-per-second'
+              ? 'B'
+              : option.id === 'meters-per-second-squared'
+                ? 'C'
+                : 'D')}
       </span>
       <FormulaBlock size="sm" className="font-bold">
         {option.label}

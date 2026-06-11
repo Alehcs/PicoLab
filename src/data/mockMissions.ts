@@ -17,6 +17,21 @@ export const dailyChallenge = {
     difficulty: 'Medium',
     reward: { label: '+25 PicoPoints', points: 25 },
   } satisfies Mission,
+  question: {
+    id: 'daily-final-velocity-q',
+    prompt:
+      'A runner starts from rest and accelerates at 1.5 m/s² for 6 s. What is the final velocity?',
+    options: [
+      { id: 'six-mps', label: '6 m/s' },
+      { id: 'nine-mps', label: '9 m/s' },
+      { id: 'nine-m', label: '9 m' },
+      { id: 'one-point-five-mps', label: '1.5 m/s' },
+    ],
+    correctOptionId: 'nine-mps',
+    feedbackCorrect: 'Nice work. Acceleration times time gives velocity, so the unit is m/s.',
+    feedbackUsefulSignal:
+      'Useful signal: the number is close, but final velocity should use m/s, not m.',
+  } satisfies PracticeQuestion,
 };
 
 export const focusMission = {

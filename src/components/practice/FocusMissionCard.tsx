@@ -76,10 +76,11 @@ export function FocusMissionCard({
       </div>
 
       <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-        {question.options.map((option) => (
+        {question.options.map((option, index) => (
           <AnswerOptionButton
             key={option.id}
             option={option}
+            letter={String.fromCharCode(65 + index)}
             selected={selectedOptionId === option.id}
             checked={checked}
             correct={

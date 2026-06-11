@@ -110,6 +110,10 @@ export function PracticeMissionsPage() {
   const [progress, setProgress] = useState<PracticeProgress>(() => loadPracticeProgress());
   const [randomPreview, setRandomPreview] = useState(randomMissions[0].title);
   const [askPicoOpen, setAskPicoOpen] = useState(false);
+  const [dailyStarted, setDailyStarted] = useState(false);
+  const [dailySelectedOptionId, setDailySelectedOptionId] = useState<string | null>(null);
+  const [dailyChecked, setDailyChecked] = useState(false);
+  const [dailyCompleting, setDailyCompleting] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -312,6 +316,85 @@ export function PracticeMissionsPage() {
     [focusPracticeMission.rewardPicoPoints, progress.streak],
   );
 
+  // --- Daily Challenge (interactive, in-page, deterministic) -------------------
+  const dailyQuestion = dailyChallenge.question;
+  const dailyCompleted = progress.completedMissionIds.includes(dailyPracticeMission.id);
+  const dailyAnswerCorrect = dailySelectedOptionId === dailyQuestion.correctOptionId;
+  const dailyFeedbackTitle = dailyAnswerCorrect
+    ? 'Nice work.'
+    : dailySelectedOptionId === 'nine-m'
+      ? 'Useful signal.'
+      : 'Almost there.';
+  const dailyFeedbackBody = dailyAnswerCorrect
+    ? dailyQuestion.feedbackCorrect
+    : dailySelectedOptionId === 'nine-m'
+      ? dailyQuestion.feedbackUsefulSignal
+      : 'Not quite — multiply acceleration by time: 1.5 m/s² × 6 s = 9 m/s.';
+
+  const startDailyChallenge = () => {
+    setDailyStarted(true);
+    setDailySelectedOptionId(null);
+    setDailyChecked(false);
+  };
+
+  const selectDailyOption = (optionId: string) => {
+    setDailySelectedOptionId(optionId);
+    setDailyChecked(false);
+  };
+
+  const checkDailyAnswer = () => {
+    if (!dailySelectedOptionId) return;
+    setDailyChecked(true);
+  };
+
+  const completeDailyChallenge = async () => {
+    if (dailyCompleting || dailyCompleted) return;
+
+    setDailyCompleting(true);
+    const completedDailyChallengeDate = new Date().toISOString();
+
+    try {
+      const completion = await picolabApi.completePracticeMission({
+        missionId: dailyPracticeMission.id,
+        status: 'complete',
+      });
+
+      if (completion.ok) {
+        const data = completion.data;
+        setProgress((current) =>
+          applyPracticeMissionCompletion(current, {
+            missionId: dailyPracticeMission.id,
+            awardedPicoPoints: data.awardedPicoPoints,
+            updatedStreak: data.updatedStreak,
+            completedDailyChallengeDate,
+            improvedSignals: data.improvedSignals,
+            unlockedBadges: data.unlockedBadges?.map((badge) => badge.name),
+          }),
+        );
+      } else {
+        setProgress((current) =>
+          applyPracticeMissionCompletion(current, {
+            missionId: dailyPracticeMission.id,
+            awardedPicoPoints: dailyPracticeMission.rewardPicoPoints,
+            updatedStreak: progress.streak + 1,
+            completedDailyChallengeDate,
+          }),
+        );
+      }
+    } catch {
+      setProgress((current) =>
+        applyPracticeMissionCompletion(current, {
+          missionId: dailyPracticeMission.id,
+          awardedPicoPoints: dailyPracticeMission.rewardPicoPoints,
+          updatedStreak: progress.streak + 1,
+          completedDailyChallengeDate,
+        }),
+      );
+    } finally {
+      setDailyCompleting(false);
+    }
+  };
+
   return (
     <div className="p-fade">
       <PageHeader
@@ -333,21 +416,33 @@ export function PracticeMissionsPage() {
           <section className="mb-6">
             <div className="mb-2.5 flex items-baseline gap-2">
               <span className="p-section-lbl">Start here</span>
-              <span className="text-[12px] text-pico-muted">Step 1 · today's recommended practice</span>
+              <span className="text-[12px] text-pico-muted">Step 1 · today's streak task</span>
             </div>
             <DailyChallengeCard
               mission={dailyMission}
               title="Daily Challenge"
               problem={dailyPracticeMission.prompt}
-              completed={progress.completedMissionIds.includes(dailyPracticeMission.id)}
-              onStart={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              completed={dailyCompleted}
+              started={dailyStarted}
+              question={dailyQuestion}
+              selectedOptionId={dailySelectedOptionId}
+              checked={dailyChecked}
+              answerCorrect={dailyAnswerCorrect}
+              feedbackTitle={dailyFeedbackTitle}
+              feedbackBody={dailyFeedbackBody}
+              completing={dailyCompleting}
+              earnedPoints={dailyPracticeMission.rewardPicoPoints}
+              onStart={startDailyChallenge}
+              onSelect={selectDailyOption}
+              onCheck={checkDailyAnswer}
+              onComplete={completeDailyChallenge}
             />
           </section>
 
           <section className="mb-6">
             <div className="mb-2.5 flex items-baseline gap-2">
-              <span className="p-section-lbl">Your current focus</span>
-              <span className="text-[12px] text-pico-muted">Step 2 · the skill Pico wants you to strengthen</span>
+              <span className="p-section-lbl">Pico’s recommended practice</span>
+              <span className="text-[12px] text-pico-muted">Step 2 · strengthen the skill Pico noticed</span>
             </div>
             <FocusMissionCard
               selectedOptionId={selectedOptionId}
@@ -356,7 +451,7 @@ export function PracticeMissionsPage() {
               question={focusQuestion}
               title={focusPracticeMission.title}
               description={focusMission.description}
-              context={`Focus area: ${focusPracticeMission.topic}`}
+              context={focusMission.context}
               progressLabel={focusMissionCompleted ? 'Completed' : focusMission.progressLabel}
               answerResult={answerResult}
               completed={focusMissionCompleted}
