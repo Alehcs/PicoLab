@@ -4,7 +4,7 @@ import { DailyChallengeCard } from '../components/practice/DailyChallengeCard';
 import { FocusMissionCard } from '../components/practice/FocusMissionCard';
 import { MissionCompleteCard } from '../components/practice/MissionCompleteCard';
 import { PracticeCoachPanel } from '../components/practice/PracticeCoachPanel';
-import { RandomMissionCard } from '../components/practice/RandomMissionCard';
+import { RandomMissionPanel } from '../components/practice/RandomMissionPanel';
 import { PageHeader } from '../components/layout/PageHeader';
 import { AskPicoDrawer } from '../components/pico/AskPicoDrawer';
 import { Card } from '../components/ui/Card';
@@ -58,6 +58,10 @@ const randomMissionDescriptions: Record<string, string | undefined> = Object.fro
   randomMissions.map((mission) => [mission.id, mission.description]),
 );
 
+const randomMissionQuestions: Record<string, Mission['question']> = Object.fromEntries(
+  randomMissions.map((mission) => [mission.id, mission.question]),
+);
+
 const toMissionCard = (mission: PracticeMission): Mission => ({
   id: mission.id,
   title: mission.title,
@@ -70,6 +74,7 @@ const toMissionCard = (mission: PracticeMission): Mission => ({
     points: mission.rewardPicoPoints,
   },
   description: randomMissionDescriptions[mission.id],
+  question: randomMissionQuestions[mission.id],
 });
 
 const toPracticeQuestion = (mission: PracticeMission): PracticeQuestion => ({
@@ -108,14 +113,17 @@ export function PracticeMissionsPage() {
   const [answerResult, setAnswerResult] = useState<PracticeAnswerResponse | null>(null);
   const [completionResult, setCompletionResult] = useState<PracticeCompleteResponse | null>(null);
   const [progress, setProgress] = useState<PracticeProgress>(() => loadPracticeProgress());
-  const [randomPreview, setRandomPreview] = useState(randomMissions[0].title);
   const [askPicoOpen, setAskPicoOpen] = useState(false);
   const [dailyStarted, setDailyStarted] = useState(false);
   const [dailySelectedOptionId, setDailySelectedOptionId] = useState<string | null>(null);
   const [dailyChecked, setDailyChecked] = useState(false);
   const [dailyCompleting, setDailyCompleting] = useState(false);
-  const [extraPracticeActive, setExtraPracticeActive] = useState(false);
-  const randomSectionRef = useRef<HTMLDivElement>(null);
+  // Optional, one-at-a-time random mission (shown only after the student asks).
+  const [randomMission, setRandomMission] = useState<Mission | null>(null);
+  const [randomSelectedOptionId, setRandomSelectedOptionId] = useState<string | null>(null);
+  const [randomChecked, setRandomChecked] = useState(false);
+  const [randomCompleting, setRandomCompleting] = useState(false);
+  const randomMissionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -134,10 +142,7 @@ export function PracticeMissionsPage() {
 
         if (dailyResult.ok) setDailyPracticeMission(dailyResult.data);
         if (focusResult.ok) setFocusPracticeMission(focusResult.data);
-        if (randomResult.ok) {
-          setRandomPracticeList(randomResult.data);
-          setRandomPreview(randomResult.data[0]?.title ?? randomMissions[0].title);
-        }
+        if (randomResult.ok) setRandomPracticeList(randomResult.data);
       } catch {
         if (import.meta.env?.DEV) {
           console.warn('Practice missions failed to load; using local fallback.');
@@ -293,15 +298,58 @@ export function PracticeMissionsPage() {
     setCompletionResult(null);
   };
 
-  const continueExtraPractice = () => {
-    // Select the first random mission that isn't already selected, then bring the
-    // optional Random Missions section into view. No new solving flow is added.
-    const firstUnselected =
-      randomMissionCards.find((mission) => mission.title !== randomPreview) ??
-      randomMissionCards[0];
-    if (firstUnselected) setRandomPreview(firstUnselected.title);
-    setExtraPracticeActive(true);
-    randomSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const pickRandomMission = () => {
+    const pool = randomMissionCards.filter((mission) => mission.question);
+    if (!pool.length) return;
+    // Avoid repeating the same mission twice in a row when more than one exists.
+    const candidates =
+      pool.length > 1 && randomMission
+        ? pool.filter((mission) => mission.id !== randomMission.id)
+        : pool;
+    const next = candidates[Math.floor(Math.random() * candidates.length)];
+
+    setRandomMission(next);
+    setRandomSelectedOptionId(null);
+    setRandomChecked(false);
+    setRandomCompleting(false);
+    window.requestAnimationFrame(() =>
+      randomMissionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
+  };
+
+  const selectRandomOption = (optionId: string) => {
+    setRandomSelectedOptionId(optionId);
+    setRandomChecked(false);
+  };
+
+  const checkRandomAnswer = () => {
+    if (!randomSelectedOptionId) return;
+    setRandomChecked(true);
+  };
+
+  const completeRandomMission = async () => {
+    if (!randomMission || randomCompleting) return;
+    if (progress.completedMissionIds.includes(randomMission.id)) return;
+
+    setRandomCompleting(true);
+    // Award this mission's own reward so the points match the card, and let the
+    // existing completion endpoint run (backend-first with local fallback).
+    const awardedPicoPoints = randomMission.reward.points;
+    try {
+      await picolabApi.completePracticeMission({
+        missionId: randomMission.id,
+        status: 'complete',
+      });
+    } catch {
+      // Ignore; local progress still updates below.
+    }
+    setProgress((current) =>
+      applyPracticeMissionCompletion(current, {
+        missionId: randomMission.id,
+        awardedPicoPoints,
+      }),
+    );
+    setRandomCompleting(false);
   };
 
   const openVisualLab = () => {
@@ -472,7 +520,7 @@ export function PracticeMissionsPage() {
               <MissionCompleteCard
                 onViewRoadmap={() => navigate('/growth-path')}
                 onOpenGrowthMap={() => navigate('/growth-map')}
-                onContinueExtraPractice={continueExtraPractice}
+                onTryRandomMission={pickRandomMission}
                 onAddAnotherProblem={() => navigate('/add-problem')}
                 copy={completionCopy}
                 stats={completionStats}
@@ -481,41 +529,21 @@ export function PracticeMissionsPage() {
             </section>
           ) : null}
 
-          <section ref={randomSectionRef} className="scroll-mt-6">
-            <div className="mb-3">
-              <span className="p-section-lbl">Optional extra practice</span>
-              <span className="ml-2 text-[12px] text-pico-muted">Step 3 · pick another short mission for extra PicoPoints</span>
-            </div>
-            <div className="mb-4 flex flex-col gap-1">
-              <h2 className="text-[18px] font-extrabold tracking-[-0.02em] text-pico-text">
-                Random Missions
-              </h2>
-              <p className="text-[13px] leading-relaxed text-pico-secondary">
-                Optional and separate from your focus mission — choose a short mission for extra
-                PicoPoints.
-              </p>
-            </div>
-
-            {extraPracticeActive ? (
-              <Card variant="blue" className="p-fade mb-4 px-4 py-2.5">
-                <span className="text-[12.5px] font-semibold text-[#2A60A8]">
-                  Extra practice selected. Pick a short mission below to keep going.
-                </span>
-              </Card>
-            ) : null}
-
-            <div className="grid gap-3 md:grid-cols-3">
-              {randomMissionCards.map((mission) => (
-                <RandomMissionCard
-                  key={mission.id}
-                  mission={mission}
-                  completed={progress.completedMissionIds.includes(mission.id)}
-                  selected={mission.title === randomPreview}
-                  onStart={() => setRandomPreview(mission.title)}
-                />
-              ))}
-            </div>
-          </section>
+          {randomMission ? (
+            <section ref={randomMissionRef} className="mb-6 scroll-mt-6">
+              <RandomMissionPanel
+                mission={randomMission}
+                selectedOptionId={randomSelectedOptionId}
+                checked={randomChecked}
+                completed={progress.completedMissionIds.includes(randomMission.id)}
+                completing={randomCompleting}
+                onSelect={selectRandomOption}
+                onCheck={checkRandomAnswer}
+                onComplete={completeRandomMission}
+                onTryAnother={pickRandomMission}
+              />
+            </section>
+          ) : null}
         </main>
 
         <aside className="min-w-0">

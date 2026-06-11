@@ -15,6 +15,7 @@ export type Mission = {
   difficulty: MissionDifficulty;
   reward: MissionReward;
   description?: string;
+  question?: PracticeQuestion;
 };
 
 export type AnswerOption = {

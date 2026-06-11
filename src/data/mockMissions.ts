@@ -68,6 +68,19 @@ export const randomMissions: Mission[] = [
     difficulty: 'Easy',
     reward: { label: '+10 PicoPoints', points: 10 },
     description: 'Read a graph and decide what the slope is telling you.',
+    question: {
+      id: 'graph-reading-sprint-q',
+      prompt: 'On a distance–time graph, what does the slope of the line represent?',
+      options: [
+        { id: 'speed', label: 'Speed' },
+        { id: 'distance', label: 'Distance' },
+        { id: 'time', label: 'Time' },
+        { id: 'area', label: 'Area' },
+      ],
+      correctOptionId: 'speed',
+      feedbackCorrect: 'Right — slope on a distance–time graph is the speed.',
+      feedbackUsefulSignal: 'Close. Slope is rise over run: distance ÷ time, which is speed.',
+    },
   },
   {
     id: 'velocity-vs-distance',
@@ -77,6 +90,19 @@ export const randomMissions: Mission[] = [
     difficulty: 'Medium',
     reward: { label: '+15 PicoPoints', points: 15 },
     description: 'Tell velocity and distance apart from a motion graph.',
+    question: {
+      id: 'velocity-vs-distance-q',
+      prompt: 'A velocity–time graph is a flat horizontal line. What does that tell you?',
+      options: [
+        { id: 'constant-velocity', label: 'Constant velocity' },
+        { id: 'increasing-velocity', label: 'Increasing velocity' },
+        { id: 'zero-velocity', label: 'Zero velocity' },
+        { id: 'constant-acceleration', label: 'Constant acceleration' },
+      ],
+      correctOptionId: 'constant-velocity',
+      feedbackCorrect: 'Nice — a flat velocity–time line means velocity is not changing.',
+      feedbackUsefulSignal: 'A flat line means the value stays the same, so velocity is constant.',
+    },
   },
   {
     id: 'algebra-sign-check',
@@ -86,6 +112,19 @@ export const randomMissions: Mission[] = [
     difficulty: 'Easy',
     reward: { label: '+10 PicoPoints', points: 10 },
     description: 'Catch the sign slip before it changes the answer.',
+    question: {
+      id: 'algebra-sign-check-q',
+      prompt: 'Simplify: −3 + (−5).',
+      options: [
+        { id: 'neg-eight', label: '−8' },
+        { id: 'eight', label: '8' },
+        { id: 'neg-two', label: '−2' },
+        { id: 'two', label: '2' },
+      ],
+      correctOptionId: 'neg-eight',
+      feedbackCorrect: 'Correct — two negatives add to a larger negative: −8.',
+      feedbackUsefulSignal: 'Watch the signs: adding two negatives gives −8, not a positive.',
+    },
   },
 ];
 

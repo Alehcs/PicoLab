@@ -1,4 +1,4 @@
-import { CheckCircle2, Map, Plus, Route, Target } from 'lucide-react';
+import { CheckCircle2, Map, Plus, Route, Shuffle } from 'lucide-react';
 import { missionComplete } from '../../data/mockMissions';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -6,7 +6,7 @@ import { Card } from '../ui/Card';
 type MissionCompleteCardProps = {
   onViewRoadmap: () => void;
   onOpenGrowthMap: () => void;
-  onContinueExtraPractice: () => void;
+  onTryRandomMission: () => void;
   onAddAnotherProblem: () => void;
   title?: string;
   copy?: string;
@@ -20,7 +20,7 @@ type MissionCompleteCardProps = {
 export function MissionCompleteCard({
   onViewRoadmap,
   onOpenGrowthMap,
-  onContinueExtraPractice,
+  onTryRandomMission,
   onAddAnotherProblem,
   title = missionComplete.title,
   copy = missionComplete.copy,
@@ -61,9 +61,9 @@ export function MissionCompleteCard({
           <Map size={13} />
           Open Growth Map
         </Button>
-        <Button variant="secondary" size="sm" onClick={onContinueExtraPractice}>
-          <Target size={13} />
-          Continue with extra practice
+        <Button variant="secondary" size="sm" onClick={onTryRandomMission}>
+          <Shuffle size={13} />
+          Try random mission
         </Button>
         <Button variant="ghost" size="sm" onClick={onAddAnotherProblem}>
           <Plus size={13} />
