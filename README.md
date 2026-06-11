@@ -110,8 +110,12 @@ The default frontend API URL is `http://127.0.0.1:8787/api`. If the backend is n
 Suggested sample problem:
 
 ```txt
-An object starts at 2 m/s and accelerates at 4 m/s^2 for 2 seconds. Find the final velocity.
+A car starts from rest and accelerates at 2 m/s² for 5 s. What is its final velocity?
 ```
+
+## Demo Video
+
+The demo video is submitted separately with the hackathon entry.
 
 ## What Is Real vs Mock
 
