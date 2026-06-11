@@ -2,7 +2,7 @@
 """Generate the PicoLab hackathon submission PDFs.
 
 Outputs (under <repo>/submission):
-  1. PicoLab_Project_Description.pdf  -> exactly one page, design overview.
+  1. PicoLab_Project_Description.pdf  -> one-page black-and-white project brief.
   2. PicoLab_Code_PDF.pdf             -> repo overview, file tree, code excerpts.
 
 Usage:
@@ -21,7 +21,6 @@ from reportlab.lib.colors import HexColor
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas as canvas_mod
 from reportlab.platypus import (
     BaseDocTemplate,
@@ -40,19 +39,59 @@ PROJECT_PDF = OUT_DIR / "PicoLab_Project_Description.pdf"
 CODE_PDF = OUT_DIR / "PicoLab_Code_PDF.pdf"
 REPO_URL = "https://github.com/Alehcs/PicoLab"
 
-# --- PicoLab palette ---------------------------------------------------------
-BG = HexColor("#FAFBF8")        # off-white background
-INK = HexColor("#2C3338")       # primary text
-SECONDARY = HexColor("#5F6468") # secondary text
-MUTED = HexColor("#8A9188")     # muted
-BORDER = HexColor("#E2E6DC")    # soft border
-BLUE = HexColor("#4A90E2")
-GREEN = HexColor("#5FBF8F")
-YELLOW = HexColor("#F6C85F")
-SOFT_BLUE = HexColor("#EAF2FC")
-SOFT_GREEN = HexColor("#E8F6EE")
-SOFT_YELLOW = HexColor("#FDF3D7")
-CODE_BG = HexColor("#F4F6F1")
+# --- Black-and-white palette (project brief) ---------------------------------
+BLACK = HexColor("#1A1A1A")
+DARK = HexColor("#333333")
+BODY = HexColor("#4A4A4A")
+GREY = HexColor("#6B6B6B")
+LIGHT = HexColor("#8C8C8C")
+RULE = HexColor("#CFCFCF")
+HAIR = HexColor("#E2E2E2")
+BOXBG = HexColor("#F3F3F3")
+BOXBORDER = HexColor("#D4D4D4")
+
+# Muted accents for the (separate) code overview PDF only.
+C_INK = HexColor("#2C3338")
+C_SECOND = HexColor("#5F6468")
+C_MUTED = HexColor("#8A9188")
+C_ACCENT = HexColor("#3A3F44")
+C_BORDER = HexColor("#DDE1DA")
+C_CODEBG = HexColor("#F4F6F1")
+C_BG = HexColor("#FAFBF8")
+
+
+# --- Glyph sanitizer: keep PDFs free of black-box / broken Unicode -----------
+_SUBSCRIPT = {ord(c): str(i) for i, c in enumerate("₀₁₂₃₄₅₆₇₈₉")}
+_SUPERSCRIPT = {0x2070: "0", 0x2074: "4", 0x2075: "5", 0x2076: "6",
+                0x2077: "7", 0x2078: "8", 0x2079: "9"}
+_ARROWS = {0x2192: "->", 0x2190: "<-", 0x2194: "<->", 0x21D2: "=>"}
+# Codepoints > 255 that ARE present in the standard WinAnsi font encoding.
+_WINANSI_OK = {
+    0x2018, 0x2019, 0x201C, 0x201D, 0x2013, 0x2014, 0x2022, 0x2026,
+    0x2020, 0x2021, 0x2030, 0x2039, 0x203A, 0x201A, 0x201E, 0x2122,
+    0x20AC, 0x0152, 0x0153, 0x0160, 0x0161, 0x0178, 0x017D, 0x017E,
+    0x0192, 0x02C6, 0x02DC,
+}
+
+
+def pdf_safe(text: str) -> str:
+    """Map glyphs Courier/Helvetica cannot render to safe equivalents."""
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if cp <= 0xFF:
+            out.append(ch)
+        elif cp in _SUBSCRIPT:
+            out.append(_SUBSCRIPT[cp])
+        elif cp in _SUPERSCRIPT:
+            out.append(_SUPERSCRIPT[cp])
+        elif cp in _ARROWS:
+            out.append(_ARROWS[cp])
+        elif cp in _WINANSI_OK:
+            out.append(ch)
+        else:
+            out.append("?")
+    return "".join(out)
 
 
 # --- Data --------------------------------------------------------------------
@@ -61,72 +100,64 @@ def run(cmd: list[str]) -> str:
         return subprocess.run(
             cmd, cwd=REPO_ROOT, capture_output=True, text=True, check=False
         ).stdout.rstrip("\n")
-    except Exception as exc:  # pragma: no cover - defensive
+    except Exception as exc:  # pragma: no cover
         return f"(unavailable: {exc})"
 
 
-COMMIT_LOG = run(["git", "log", "--oneline", "--decorate", "-20"]) or "(no commits)"
+COMMIT_LOG = pdf_safe(run(["git", "log", "--oneline", "--decorate", "-20"]) or "(no commits)")
 
-# Curated, noise-free repository tree (folders that matter for review).
+# Clean ASCII repository tree (no box-drawing glyphs).
 FILE_TREE = """PicoLab/
-├── package.json                     scripts + dependencies
-├── vite.config.ts                   Vite build config
-├── tailwind.config.js               design tokens / safelist
-├── tsconfig.json                    TypeScript project refs
-├── index.html                       app entry
-├── README.md
-├── docs/                            architecture + demo notes
-│   ├── api-contracts.md
-│   ├── demo-script.md
-│   ├── diagnostic-engine.md
-│   ├── learning-signal-taxonomy.md
-│   └── integration-roadmap.md
-├── src/
-│   ├── main.tsx                     React entry
-│   ├── app/                         App shell + route table
-│   │   ├── App.tsx
-│   │   └── routes.tsx
-│   ├── pages/                       page-based student workflow
-│   │   ├── AddProblemPage.tsx
-│   │   ├── ScanConfirmPage.tsx
-│   │   ├── SmartNotebookPage.tsx
-│   │   ├── VisualLabPage.tsx
-│   │   ├── PracticeMissionsPage.tsx
-│   │   ├── GrowthMapPage.tsx
-│   │   ├── GrowthPathPage.tsx
-│   │   ├── ProfilePage.tsx
-│   │   └── SettingsPage.tsx
-│   ├── components/                  shared component system
-│   │   ├── ui/                      Button, Card, Badge, Tabs, ProgressBar
-│   │   ├── layout/                  AppShell, Sidebar, PageHeader
-│   │   ├── notebook/                Smart Notebook step cards
-│   │   ├── practice/                Daily / Focus / Random mission cards
-│   │   ├── visual-lab/              motion + graph simulations
-│   │   ├── growth/                  Growth Map + Roadmap cards
-│   │   └── pico/                    mascot + Ask Pico drawer
-│   ├── services/                    app logic + API client
-│   │   ├── apiClient.ts             fetch wrapper w/ timeout
-│   │   ├── picolabApi.ts            backend-first + local fallback
-│   │   ├── mockPicolabApi.ts        deterministic local mock
-│   │   ├── diagnosticEngine.ts      learning-signal classifier
-│   │   ├── practiceProgress.ts      localStorage progress
-│   │   └── visualLabSuggestion.ts   notebook -> Visual Lab context
-│   ├── data/                        mock content + taxonomy
-│   │   ├── learningSignals.ts
-│   │   ├── mockMissions.ts
-│   │   └── mockNotebook.ts
-│   ├── types/                       shared TypeScript types
-│   └── styles/                      design tokens + globals.css
-└── server/                         Express + TypeScript mock API
-    ├── src/index.ts                 server bootstrap
-    ├── src/routes/                  REST endpoints
-    │   ├── problems.ts  notebooks.ts  practice.ts
-    │   ├── growth.ts    profile.ts    askPico.ts
-    │   └── visualLab.ts settings.ts   health.ts
-    ├── src/services/diagnosticEngine.ts
-    └── src/data/learningSignals.ts"""
+|-- package.json                   scripts + dependencies
+|-- vite.config.ts                 Vite build config
+|-- tailwind.config.js             design tokens / safelist
+|-- tsconfig.json                  TypeScript project refs
+|-- index.html                     app entry
+|-- README.md
+|-- docs/                          architecture + demo notes
+|   |-- api-contracts.md
+|   |-- demo-script.md
+|   |-- diagnostic-engine.md
+|   |-- learning-signal-taxonomy.md
+|   `-- integration-roadmap.md
+|-- src/
+|   |-- main.tsx                   React entry
+|   |-- app/                       App shell + route table
+|   |   |-- App.tsx
+|   |   `-- routes.tsx
+|   |-- pages/                     page-based student workflow
+|   |   |-- AddProblemPage.tsx     ScanConfirmPage.tsx
+|   |   |-- SmartNotebookPage.tsx  VisualLabPage.tsx
+|   |   |-- PracticeMissionsPage.tsx
+|   |   |-- GrowthMapPage.tsx      GrowthPathPage.tsx
+|   |   `-- ProfilePage.tsx        SettingsPage.tsx
+|   |-- components/                shared component system
+|   |   |-- ui/                    Button, Card, Badge, Tabs, ProgressBar
+|   |   |-- layout/                AppShell, Sidebar, PageHeader
+|   |   |-- notebook/              Smart Notebook step cards
+|   |   |-- practice/              Daily / Focus / Random mission cards
+|   |   |-- visual-lab/            motion + graph simulations
+|   |   |-- growth/                Growth Map + Roadmap cards
+|   |   `-- pico/                  mascot + Ask Pico drawer
+|   |-- services/                  app logic + API client
+|   |   |-- apiClient.ts           fetch wrapper w/ timeout
+|   |   |-- picolabApi.ts          backend-first + local fallback
+|   |   |-- mockPicolabApi.ts      deterministic local mock
+|   |   |-- diagnosticEngine.ts    learning-signal classifier
+|   |   |-- practiceProgress.ts    localStorage progress
+|   |   `-- visualLabSuggestion.ts notebook -> Visual Lab context
+|   |-- data/                      mock content + taxonomy
+|   |-- types/                     shared TypeScript types
+|   `-- styles/                    design tokens + globals.css
+`-- server/                        Express + TypeScript mock API
+    |-- src/index.ts               server bootstrap
+    |-- src/routes/                REST endpoints
+    |   |-- problems.ts  notebooks.ts  practice.ts
+    |   |-- growth.ts    profile.ts    askPico.ts
+    |   `-- visualLab.ts settings.ts   health.ts
+    |-- src/services/diagnosticEngine.ts
+    `-- src/data/learningSignals.ts"""
 
-# Files excerpted in the Code PDF (path, max lines shown).
 CODE_FILES: list[tuple[str, int]] = [
     ("src/app/routes.tsx", 64),
     ("src/pages/AddProblemPage.tsx", 70),
@@ -149,9 +180,7 @@ CODE_FILES: list[tuple[str, int]] = [
 ]
 
 
-# --- Shared helpers ----------------------------------------------------------
 def wrap_code_line(line: str, max_chars: int = 108) -> list[str]:
-    """Hard-wrap a single code line so monospace text never clips."""
     line = line.replace("\t", "    ")
     if len(line) <= max_chars:
         return [line]
@@ -174,20 +203,15 @@ def read_excerpt(rel_path: str, max_lines: int) -> tuple[str, int, int]:
     shown = raw[:max_lines]
     wrapped: list[str] = []
     for ln in shown:
-        wrapped.extend(wrap_code_line(ln))
+        wrapped.extend(wrap_code_line(pdf_safe(ln)))
     return ("\n".join(wrapped), len(shown), total)
 
 
 # =============================================================================
-# PDF 1 — One-page project description (manual canvas for exact 1-page control)
+# PDF 1 — One-page black-and-white project brief
 # =============================================================================
-def text_height(c, text, font, size, width, leading):
-    return len(wrap_para(c, text, font, size, width)) * leading
-
-
 def wrap_para(c, text, font, size, width):
-    words = text.split()
-    lines, cur = [], ""
+    words, lines, cur = text.split(), [], ""
     for w in words:
         trial = (cur + " " + w).strip()
         if c.stringWidth(trial, font, size) <= width:
@@ -201,7 +225,8 @@ def wrap_para(c, text, font, size, width):
     return lines or [""]
 
 
-def draw_para(c, text, x, y, font, size, width, leading, color=INK):
+def draw_para(c, text, x, y, width, font="Helvetica", size=8.5,
+              leading=10.8, color=BODY):
     c.setFillColor(color)
     c.setFont(font, size)
     for line in wrap_para(c, text, font, size, width):
@@ -210,190 +235,221 @@ def draw_para(c, text, x, y, font, size, width, leading, color=INK):
     return y
 
 
-def draw_heading(c, label, x, y, accent):
-    c.setFillColor(accent)
-    c.rect(x, y - 1, 9, 9, fill=1, stroke=0)
-    c.setFillColor(INK)
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(x + 14, y, label.upper())
-    return y - 15
+def section_heading(c, label, x, y, width):
+    c.setFillColor(BLACK)
+    c.setFont("Helvetica-Bold", 9.5)
+    c.drawString(x, y, label.upper())
+    c.setStrokeColor(RULE)
+    c.setLineWidth(0.6)
+    c.line(x, y - 4.5, x + width, y - 4.5)
+    return y - 16
+
+
+def bullet(c, x, y, term, desc, width, size=8.5, leading=10.8):
+    # small square marker
+    c.setFillColor(GREY)
+    c.rect(x, y + 1.4, 2.4, 2.4, fill=1, stroke=0)
+    tx = x + 9
+    tw = width - 9
+    if term:
+        label = term + " "
+        c.setFillColor(BLACK)
+        c.setFont("Helvetica-Bold", size)
+        c.drawString(tx, y, label)
+        off = c.stringWidth(label, "Helvetica-Bold", size)
+        em = "— "  # em dash (WinAnsi-safe)
+        c.setFont("Helvetica", size)
+        c.setFillColor(BODY)
+        c.drawString(tx + off, y, em)
+        off += c.stringWidth(em, "Helvetica", size)
+        first = wrap_para(c, desc, "Helvetica", size, tw - off)
+        c.drawString(tx + off, y, first[0])
+        y -= leading
+        for line in wrap_para(c, " ".join(first[1:]), "Helvetica", size, tw) if len(first) > 1 else []:
+            c.drawString(tx, y, line)
+            y -= leading
+    else:
+        c.setFillColor(BODY)
+        c.setFont("Helvetica", size)
+        for line in wrap_para(c, desc, "Helvetica", size, tw):
+            c.drawString(tx, y, line)
+            y -= leading
+    return y - 1.5
+
+
+def draw_arrow(c, ax, ay, ln=8):
+    c.setStrokeColor(GREY)
+    c.setLineWidth(0.9)
+    c.line(ax, ay, ax + ln, ay)
+    c.line(ax + ln - 2.6, ay + 2.2, ax + ln, ay)
+    c.line(ax + ln - 2.6, ay - 2.2, ax + ln, ay)
+
+
+def draw_flow_box(c, steps, x, y_top, width):
+    font, size, pad, line_h, arrow_w = "Helvetica-Bold", 7.6, 9, 12.5, 17
+    lines, cur, curw = [], [], 0.0
+    for i, t in enumerate(steps):
+        tw = c.stringWidth(t, font, size)
+        adv = tw + (arrow_w if i < len(steps) - 1 else 0)
+        if cur and curw + adv > width - 2 * pad:
+            lines.append(cur)
+            cur, curw = [], 0.0
+        cur.append((t, tw, i))
+        curw += adv
+    if cur:
+        lines.append(cur)
+    box_h = pad * 2 + len(lines) * line_h - (line_h - 9)
+    c.setFillColor(BOXBG)
+    c.setStrokeColor(BOXBORDER)
+    c.setLineWidth(0.8)
+    c.roundRect(x, y_top - box_h, width, box_h, 5, fill=1, stroke=1)
+    ty = y_top - pad - 7.5
+    for line in lines:
+        tx = x + pad
+        for (t, tw, idx) in line:
+            c.setFillColor(BLACK)
+            c.setFont(font, size)
+            c.drawString(tx, ty, t)
+            tx += tw
+            if idx < len(steps) - 1:
+                draw_arrow(c, tx + 4.5, ty + 2.4, 8)
+                tx += arrow_w
+        ty -= line_h
+    return y_top - box_h
 
 
 def build_project_pdf():
     c = canvas_mod.Canvas(str(PROJECT_PDF), pagesize=letter)
     W, H = letter
-    c.setTitle("PicoLab — Project Description")
+    c.setTitle("PicoLab - Project Description")
     c.setAuthor("PicoLab")
 
-    # background
-    c.setFillColor(BG)
-    c.rect(0, 0, W, H, fill=1, stroke=0)
+    mx = 48
+    gutter = 26
+    col_w = (W - 2 * mx - gutter) / 2
+    lx = mx
+    rx = mx + col_w + gutter
 
-    mx = 42
-    col_gap = 22
-    col_w = (W - 2 * mx - col_gap) / 2
-    left_x = mx
-    right_x = mx + col_w + col_gap
+    # --- header ---
+    c.setFillColor(BLACK)
+    c.setLineWidth(2)
+    c.setStrokeColor(BLACK)
+    c.line(mx, H - 34, W - mx, H - 34)
 
-    # --- header band ---
-    top = H - 40
-    c.setFillColor(SOFT_BLUE)
-    c.roundRect(mx, top - 60, W - 2 * mx, 60, 10, fill=1, stroke=0)
-    c.setFillColor(BLUE)
-    c.roundRect(mx, top - 60, 5, 60, 2, fill=1, stroke=0)
-    c.setFillColor(BLUE)
+    c.setFillColor(BLACK)
     c.setFont("Helvetica-Bold", 27)
-    c.drawString(mx + 18, top - 28, "PicoLab")
-    c.setFillColor(SECONDARY)
-    c.setFont("Helvetica", 10)
+    c.drawString(mx, H - 64, "PicoLab")
+    c.setFillColor(DARK)
+    c.setFont("Helvetica", 10.5)
     c.drawString(
-        mx + 18, top - 46,
-        "A visual AI learning coach that turns STEM mistakes into learning signals.",
-    )
-    # tag top-right
-    tag = "Hackathon Submission"
-    c.setFont("Helvetica-Bold", 7.5)
-    tw = c.stringWidth(tag, "Helvetica-Bold", 7.5)
-    c.setFillColor(GREEN)
-    c.roundRect(W - mx - tw - 16, top - 22, tw + 12, 14, 7, fill=1, stroke=0)
-    c.setFillColor(HexColor("#FFFFFF"))
-    c.drawString(W - mx - tw - 10, top - 18, tag)
+        mx, H - 81,
+        "A visual STEM learning coach that turns mistakes into learning signals.")
+    c.setFillColor(LIGHT)
+    c.setFont("Helvetica", 8)
+    c.drawString(
+        mx, H - 96,
+        "Hackathon Submission  ·  AI x STEM Education  ·  GitHub: " + REPO_URL)
+    c.setStrokeColor(RULE)
+    c.setLineWidth(0.8)
+    c.line(mx, H - 106, W - mx, H - 106)
 
-    body_top = top - 76
-    BF, BS, LEAD = "Helvetica", 8, 10.2
+    body_top = H - 124
 
     # ----- LEFT COLUMN -----
     y = body_top
-    y = draw_heading(c, "Purpose", left_x, y, BLUE)
+    y = section_heading(c, "Purpose", lx, y, col_w)
     y = draw_para(
         c,
-        "PicoLab helps students learn STEM problems through an interactive loop: "
-        "problem intake, structured confirmation, step-by-step solving, visual "
-        "explanation, personalized practice, and growth tracking.",
-        left_x, y, BF, BS, col_w, LEAD, SECONDARY)
+        "PicoLab helps students solve STEM problems through a guided learning "
+        "loop: problem intake, confirmation, step-by-step solving, visual "
+        "explanation, personalized practice, and progress tracking.",
+        lx, y, col_w)
     y -= 3
     y = draw_para(
         c,
-        "It is built around a simple idea: mistakes should not be treated as "
-        "failures. They should become learning signals that show students what "
-        "to practice next.",
-        left_x, y, BF, BS, col_w, LEAD, SECONDARY)
+        "Its core idea is simple: mistakes should become learning signals, not "
+        "failures.",
+        lx, y, col_w, color=DARK)
 
-    y -= 9
-    y = draw_heading(c, "Problem", left_x, y, YELLOW)
+    y -= 10
+    y = section_heading(c, "Problem", lx, y, col_w)
     y = draw_para(
         c,
-        "Many students get a numeric answer partially correct but still "
-        "misunderstand the concept, formula, graph, or unit behind it. "
-        "Traditional tools often give answers, but rarely diagnose the type of "
-        "mistake or convert it into a clear practice path.",
-        left_x, y, BF, BS, col_w, LEAD, SECONDARY)
+        "Students often get a numeric answer partially correct while still "
+        "misunderstanding the concept, formula, graph, or unit behind it. Many "
+        "tutoring tools provide answers, but do not clearly diagnose the type of "
+        "mistake or convert it into a practice path.",
+        lx, y, col_w)
 
-    y -= 9
-    y = draw_heading(c, "Solution — a guided workflow", left_x, y, GREEN)
-    steps = [
-        "Add or scan a STEM problem.",
-        "Confirm extracted values, units, target variable, and formulas.",
-        "Solve step-by-step in Smart Notebook.",
-        "Detect learning signals (unit mismatch, formula choice, graph reading, algebra).",
-        "Open a contextual Visual Lab explanation.",
-        "Practice via daily challenges and Pico's recommended missions.",
-        "Track signals in Growth Map and follow a personalized Roadmap.",
-    ]
-    c.setFont(BF, BS)
-    for i, s in enumerate(steps, 1):
-        c.setFillColor(BLUE)
-        c.setFont("Helvetica-Bold", BS)
-        c.drawString(left_x, y, f"{i}.")
-        lines = wrap_para(c, s, BF, BS, col_w - 14)
-        c.setFillColor(SECONDARY)
-        c.setFont(BF, BS)
-        for j, line in enumerate(lines):
-            c.drawString(left_x + 14, y, line)
-            y -= LEAD
-        y -= 1
+    y -= 10
+    y = section_heading(c, "Solution", lx, y, col_w)
+    for s in [
+        "adding or scanning a STEM problem",
+        "confirming values, units, target variable, and formula",
+        "solving step-by-step in Smart Notebook",
+        "detecting learning signals",
+        "opening a contextual Visual Lab explanation",
+        "practicing through missions",
+        "tracking progress in Growth Map and Roadmap",
+    ]:
+        y = bullet(c, lx, y, "", s, col_w)
 
     # ----- RIGHT COLUMN -----
     y = body_top
-    y = draw_heading(c, "Key Features", right_x, y, BLUE)
-    features = [
-        ("Add Problem", "type, scan, or enter formula-based STEM problems."),
-        ("Scan & Confirm", "Pico structures known values, units, target, formula."),
-        ("Smart Notebook", "step-by-step solving with contextual feedback."),
-        ("Learning Signals", "mistakes classified by units, formulas, graphs, algebra, concepts, reading."),
-        ("Visual Lab", "interactive visuals linked to the detected signal."),
-        ("Practice Missions", "daily challenge, recommended practice, optional random missions."),
-        ("Growth Map", "tracks recurring learning signals over time."),
-        ("Roadmap", "converts signals into a personalized learning path."),
-        ("Ask Pico", "contextual coaching drawer with mock/fallback behavior."),
-    ]
-    for name, desc in features:
-        c.setFillColor(GREEN)
-        c.circle(right_x + 2.5, y + 3, 2, fill=1, stroke=0)
-        bold = name + " — "
-        c.setFillColor(INK)
-        c.setFont("Helvetica-Bold", BS)
-        c.drawString(right_x + 9, y, bold)
-        offset = c.stringWidth(bold, "Helvetica-Bold", BS)
-        # first line continues after the bold label
-        first_w = col_w - 9 - offset
-        rest = wrap_para(c, desc, BF, BS, first_w)
-        c.setFillColor(SECONDARY)
-        c.setFont(BF, BS)
-        c.drawString(right_x + 9 + offset, y, rest[0])
-        y -= LEAD
-        for line in wrap_para(c, " ".join(rest[1:]), BF, BS, col_w - 9) if len(rest) > 1 else []:
-            c.drawString(right_x + 9, y, line)
-            y -= LEAD
-        y -= 1
+    y = section_heading(c, "Key Features", rx, y, col_w)
+    for term, desc in [
+        ("Add Problem", "type, scan, or formula-based input"),
+        ("Scan & Confirm", "structured review before solving"),
+        ("Smart Notebook", "step-by-step feedback"),
+        ("Learning Signals", "unit, formula, graph, algebra, concept, and reading signals"),
+        ("Visual Lab", "interactive explanations linked to the detected signal"),
+        ("Practice Missions", "daily challenge, recommended practice, and random mission"),
+        ("Growth Map", "tracks recurring learning signals"),
+        ("Roadmap", "turns signals into a learning path"),
+        ("Ask Pico", "contextual coaching drawer with mock/fallback behavior"),
+    ]:
+        y = bullet(c, rx, y, term, desc, col_w)
 
-    y -= 6
-    y = draw_heading(c, "Technical Implementation", right_x, y, BLUE)
-    tech = [
-        "React + Vite + TypeScript frontend.",
-        "Tailwind-based design system.",
-        "Express + TypeScript mock backend (REST).",
-        "Backend-first API client with local fallback.",
-        "Deterministic diagnostic engine for signals.",
-        "Persistent progress via localStorage / sessionStorage.",
-        "Provider-ready for future real AI integration.",
-    ]
-    c.setFont(BF, BS)
-    for t in tech:
-        c.setFillColor(BLUE)
-        c.circle(right_x + 2.5, y + 3, 2, fill=1, stroke=0)
-        c.setFillColor(SECONDARY)
-        for k, line in enumerate(wrap_para(c, t, BF, BS, col_w - 9)):
-            c.drawString(right_x + 9, y, line)
-            y -= LEAD
+    y -= 8
+    y = section_heading(c, "Technical Implementation", rx, y, col_w)
+    for t in [
+        "React + Vite + TypeScript",
+        "Tailwind-based design system",
+        "Express + TypeScript mock backend",
+        "Backend-first API client with local fallback",
+        "Deterministic diagnostic engine",
+        "localStorage / sessionStorage persistence",
+        "Provider-ready architecture for future real AI integration",
+    ]:
+        y = bullet(c, rx, y, "", t, col_w)
 
-    y -= 6
-    y = draw_heading(c, "Demo Flow", right_x, y, YELLOW)
-    flow = ("Problem -> Confirm -> Smart Notebook -> Learning Signal -> "
-            "Visual Lab -> Practice Mission -> Growth Map -> Roadmap")
-    y = draw_para(c, flow, right_x, y, "Helvetica-Bold", BS, col_w, LEAD, BLUE)
+    y -= 8
+    y = section_heading(c, "Demo Flow", rx, y, col_w)
+    steps = ["Problem", "Confirm", "Smart Notebook", "Learning Signal",
+             "Visual Lab", "Practice Mission", "Growth Map", "Roadmap"]
+    y = draw_flow_box(c, steps, rx, y + 2, col_w)
 
-    y -= 7
-    y = draw_heading(c, "Project Status", right_x, y, GREEN)
+    y -= 12
+    y = section_heading(c, "Project Status", rx, y, col_w)
     y = draw_para(
         c,
-        "PicoLab is a functional hackathon prototype. The demo uses deterministic "
-        "mock/backend logic and a canonical physics problem to show the complete "
-        "student learning loop. The architecture is ready for real AI providers, "
-        "broader STEM domains, and richer visual simulations.",
-        right_x, y, BF, BS, col_w, LEAD, SECONDARY)
+        "PicoLab is a functional hackathon prototype. The current demo uses "
+        "deterministic mock/backend logic and a canonical physics problem to "
+        "demonstrate the full learning loop. The architecture is ready for "
+        "future expansion with real AI providers, broader STEM domains, and "
+        "richer visual simulations.",
+        rx, y, col_w)
 
     # --- footer ---
-    fy = 40
-    c.setStrokeColor(BORDER)
-    c.setLineWidth(1)
-    c.line(mx, fy + 12, W - mx, fy + 12)
-    c.setFillColor(MUTED)
+    c.setStrokeColor(RULE)
+    c.setLineWidth(0.8)
+    c.line(mx, 52, W - mx, 52)
+    c.setFillColor(GREY)
     c.setFont("Helvetica-Bold", 8)
-    c.drawString(mx, fy, "Hackathon Submission  ·  PicoLab")
+    c.drawString(mx, 41, "PicoLab  ·  Hackathon Submission")
+    c.setFillColor(LIGHT)
     c.setFont("Helvetica", 8)
-    repo_text = f"GitHub Repository: {REPO_URL}"
-    c.drawRightString(W - mx, fy, repo_text)
+    c.drawRightString(W - mx, 41, "github.com/Alehcs/PicoLab")
 
     c.showPage()
     c.save()
@@ -405,68 +461,65 @@ def build_project_pdf():
 def on_page(c, doc):
     W, H = letter
     c.saveState()
-    c.setFillColor(BG)
+    c.setFillColor(C_BG)
     c.rect(0, 0, W, H, fill=1, stroke=0)
-    # footer
-    c.setStrokeColor(BORDER)
+    c.setStrokeColor(C_BORDER)
     c.setLineWidth(0.8)
     c.line(50, 44, W - 50, 44)
-    c.setFillColor(MUTED)
+    c.setFillColor(C_MUTED)
     c.setFont("Helvetica", 7.5)
-    c.drawString(50, 33, "PicoLab — Code Overview")
+    c.drawString(50, 33, "PicoLab - Code Overview")
     c.drawRightString(W - 50, 33, f"Page {doc.page}")
     c.restoreState()
 
 
-def styles():
+def code_styles():
     ss = getSampleStyleSheet()
     s = {}
     s["h1"] = ParagraphStyle("h1", parent=ss["Title"], fontName="Helvetica-Bold",
-                             fontSize=30, textColor=BLUE, spaceAfter=4, alignment=TA_LEFT)
+                             fontSize=30, textColor=C_INK, spaceAfter=4, alignment=TA_LEFT)
     s["sub"] = ParagraphStyle("sub", fontName="Helvetica", fontSize=12,
-                              textColor=SECONDARY, spaceAfter=14)
+                              textColor=C_SECOND, spaceAfter=14)
     s["h2"] = ParagraphStyle("h2", fontName="Helvetica-Bold", fontSize=14,
-                             textColor=INK, spaceBefore=14, spaceAfter=6)
+                             textColor=C_INK, spaceBefore=14, spaceAfter=6)
     s["body"] = ParagraphStyle("body", fontName="Helvetica", fontSize=9.5,
-                               textColor=SECONDARY, leading=13.5, spaceAfter=4)
+                               textColor=C_SECOND, leading=13.5, spaceAfter=4)
     s["bullet"] = ParagraphStyle("bullet", parent=s["body"], leftIndent=12,
                                  bulletIndent=2, spaceAfter=2)
     s["meta"] = ParagraphStyle("meta", fontName="Helvetica", fontSize=9.5,
-                               textColor=INK, leading=14)
+                               textColor=C_INK, leading=14)
     s["filehdr"] = ParagraphStyle("filehdr", fontName="Helvetica-Bold", fontSize=9,
-                                  textColor=BLUE, spaceBefore=10, spaceAfter=3)
+                                  textColor=C_ACCENT, spaceBefore=10, spaceAfter=3)
     s["code"] = ParagraphStyle("code", fontName="Courier", fontSize=7,
-                               textColor=INK, leading=8.6,
-                               backColor=CODE_BG, borderColor=BORDER, borderWidth=0.6,
-                               borderPadding=5, leftIndent=0, spaceAfter=8)
+                               textColor=C_INK, leading=8.6,
+                               backColor=C_CODEBG, borderColor=C_BORDER, borderWidth=0.6,
+                               borderPadding=5, spaceAfter=8)
+    s["tree"] = ParagraphStyle("tree", fontName="Courier", fontSize=7.2, leading=9.0,
+                               textColor=C_INK, backColor=C_CODEBG, borderColor=C_BORDER,
+                               borderWidth=0.6, borderPadding=6)
     return s
 
 
 def build_code_pdf():
-    s = styles()
+    s = code_styles()
     doc = BaseDocTemplate(
         str(CODE_PDF), pagesize=letter,
         leftMargin=50, rightMargin=50, topMargin=54, bottomMargin=54,
-        title="PicoLab — Code Overview", author="PicoLab",
+        title="PicoLab - Code Overview", author="PicoLab",
     )
-    frame = Frame(doc.leftMargin, doc.bottomMargin,
-                  doc.width, doc.height, id="main")
+    frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id="main")
     doc.addPageTemplates([PageTemplate(id="all", frames=[frame], onPage=on_page)])
 
     flow = []
-
-    # ---- Cover ----
     flow.append(Spacer(1, 40))
     flow.append(Paragraph("PicoLab", s["h1"]))
-    flow.append(Paragraph("Visual AI learning coach for STEM — Code Overview", s["sub"]))
+    flow.append(Paragraph("Visual STEM learning coach - Code Overview", s["sub"]))
     flow.append(Paragraph(f"<b>GitHub Repository:</b> {REPO_URL}", s["meta"]))
     flow.append(Spacer(1, 8))
     flow.append(Paragraph("<b>Tech stack</b>", s["meta"]))
-    for item in [
-        "React", "Vite", "TypeScript", "Tailwind CSS",
-        "Express", "Mock backend REST API", "Deterministic diagnostic engine",
-    ]:
-        flow.append(Paragraph(f"• {item}", s["bullet"]))
+    for item in ["React", "Vite", "TypeScript", "Tailwind CSS", "Express",
+                 "Mock backend REST API", "Deterministic diagnostic engine"]:
+        flow.append(Paragraph(f"- {item}", s["bullet"]))
     flow.append(Spacer(1, 10))
     flow.append(Paragraph(
         "This document showcases the source developed for PicoLab. Generated "
@@ -474,26 +527,21 @@ def build_code_pdf():
         "caches, lockfiles, binary media, backup bundles) are intentionally "
         "excluded.", s["body"]))
 
-    # ---- Key architecture summary ----
     flow.append(Paragraph("Key Architecture Summary", s["h2"]))
     for line in [
-        "<b>Page-based workflow</b> — each step of the student loop is a route under <font face='Courier'>src/pages/</font> wired in <font face='Courier'>routes.tsx</font>.",
-        "<b>Shared component system</b> — primitives (Button, Card, Badge) plus feature components under <font face='Courier'>src/components/</font>.",
-        "<b>Backend-first API client</b> — <font face='Courier'>picolabApi</font> calls the Express mock first and falls back to a deterministic local mock on failure/timeout.",
-        "<b>Mock backend</b> — Express + TypeScript exposes contract-shaped REST endpoints under <font face='Courier'>server/src/routes/</font>.",
-        "<b>Diagnostic engine</b> — classifies a step/answer into learning signals (units, formula, graph, algebra, concept, reading).",
-        "<b>Local persistence</b> — practice progress, signals, Ask Pico history, and Visual Lab context persist via localStorage/sessionStorage.",
-        "<b>Context hand-off</b> — Smart Notebook stores a signal-based suggestion the Visual Lab reads to open the matching template.",
+        "<b>Page-based workflow</b> - each step of the student loop is a route under <font face='Courier'>src/pages/</font> wired in <font face='Courier'>routes.tsx</font>.",
+        "<b>Shared component system</b> - primitives (Button, Card, Badge) plus feature components under <font face='Courier'>src/components/</font>.",
+        "<b>Backend-first API client</b> - <font face='Courier'>picolabApi</font> calls the Express mock first and falls back to a deterministic local mock on failure/timeout.",
+        "<b>Mock backend</b> - Express + TypeScript exposes contract-shaped REST endpoints under <font face='Courier'>server/src/routes/</font>.",
+        "<b>Diagnostic engine</b> - classifies a step/answer into learning signals (units, formula, graph, algebra, concept, reading).",
+        "<b>Local persistence</b> - practice progress, signals, Ask Pico history, and Visual Lab context persist via localStorage/sessionStorage.",
+        "<b>Context hand-off</b> - Smart Notebook stores a signal-based suggestion the Visual Lab reads to open the matching template.",
     ]:
-        flow.append(Paragraph(f"• {line}", s["bullet"]))
+        flow.append(Paragraph(f"- {line}", s["bullet"]))
 
-    # ---- Repository structure ----
     flow.append(Paragraph("Repository Structure", s["h2"]))
-    flow.append(Preformatted(FILE_TREE, ParagraphStyle(
-        "tree", fontName="Courier", fontSize=7.2, leading=9.0, textColor=INK,
-        backColor=CODE_BG, borderColor=BORDER, borderWidth=0.6, borderPadding=6)))
+    flow.append(Preformatted(pdf_safe(FILE_TREE), s["tree"]))
 
-    # ---- Important code sections ----
     flow.append(PageBreak())
     flow.append(Paragraph("Important Code Sections", s["h2"]))
     flow.append(Paragraph(
@@ -501,20 +549,16 @@ def build_code_pdf():
         "soft-wrapped; each header notes how many lines are shown.", s["body"]))
     for rel, max_lines in CODE_FILES:
         excerpt, shown, total = read_excerpt(rel, max_lines)
-        if total and shown < total:
-            hdr = f"{rel}   (lines 1-{shown} of {total})"
-        else:
-            hdr = f"{rel}   ({total} lines)"
+        hdr = (f"{rel}   (lines 1-{shown} of {total})"
+               if total and shown < total else f"{rel}   ({total} lines)")
         flow.append(Paragraph(hdr, s["filehdr"]))
         flow.append(Preformatted(excerpt, s["code"]))
 
-    # ---- Commit summary ----
     flow.append(PageBreak())
     flow.append(Paragraph("Commit Summary", s["h2"]))
     flow.append(Paragraph("Recent history (git log --oneline --decorate -20):", s["body"]))
     flow.append(Preformatted(COMMIT_LOG, s["code"]))
 
-    # ---- Verification ----
     flow.append(Paragraph("Verification", s["h2"]))
     flow.append(Paragraph("Build / QA commands:", s["body"]))
     flow.append(Preformatted(
