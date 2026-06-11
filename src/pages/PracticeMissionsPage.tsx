@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DailyChallengeCard } from '../components/practice/DailyChallengeCard';
 import { FocusMissionCard } from '../components/practice/FocusMissionCard';
@@ -114,6 +114,8 @@ export function PracticeMissionsPage() {
   const [dailySelectedOptionId, setDailySelectedOptionId] = useState<string | null>(null);
   const [dailyChecked, setDailyChecked] = useState(false);
   const [dailyCompleting, setDailyCompleting] = useState(false);
+  const [extraPracticeActive, setExtraPracticeActive] = useState(false);
+  const randomSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -186,9 +188,7 @@ export function PracticeMissionsPage() {
     progress.streak,
     progress.unlockedBadges,
   ]);
-  const completionCopy = completionResult?.awardedPicoPoints
-    ? `You earned +${completionResult.awardedPicoPoints} PicoPoints and strengthened ${focusPracticeMission.topic}.`
-    : 'Mission progress is saved. Your PicoPoints and streak are ready for your next practice.';
+  const completionCopy = 'Pico saved your progress and marked this focus area as improved.';
 
   const completeFocusMission = async (result: PracticeAnswerResponse) => {
     if (progress.completedMissionIds.includes(focusPracticeMission.id)) {
@@ -293,10 +293,15 @@ export function PracticeMissionsPage() {
     setCompletionResult(null);
   };
 
-  const tryRandomMission = () => {
-    const currentIndex = randomMissionCards.findIndex((mission) => mission.title === randomPreview);
-    const nextMission = randomMissionCards[(currentIndex + 1) % randomMissionCards.length];
-    setRandomPreview(nextMission.title);
+  const continueExtraPractice = () => {
+    // Select the first random mission that isn't already selected, then bring the
+    // optional Random Missions section into view. No new solving flow is added.
+    const firstUnselected =
+      randomMissionCards.find((mission) => mission.title !== randomPreview) ??
+      randomMissionCards[0];
+    if (firstUnselected) setRandomPreview(firstUnselected.title);
+    setExtraPracticeActive(true);
+    randomSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const openVisualLab = () => {
@@ -465,9 +470,10 @@ export function PracticeMissionsPage() {
           {isComplete ? (
             <section className="mb-6">
               <MissionCompleteCard
-                onContinueGrowthPath={() => navigate('/growth-path')}
-                onTryRandomMission={tryRandomMission}
-                onReturnToNotebook={() => navigate('/smart-notebook')}
+                onViewRoadmap={() => navigate('/growth-path')}
+                onOpenGrowthMap={() => navigate('/growth-map')}
+                onContinueExtraPractice={continueExtraPractice}
+                onAddAnotherProblem={() => navigate('/add-problem')}
                 copy={completionCopy}
                 stats={completionStats}
                 completing={completing}
@@ -475,7 +481,7 @@ export function PracticeMissionsPage() {
             </section>
           ) : null}
 
-          <section>
+          <section ref={randomSectionRef} className="scroll-mt-6">
             <div className="mb-3">
               <span className="p-section-lbl">Optional extra practice</span>
               <span className="ml-2 text-[12px] text-pico-muted">Step 3 · pick another short mission for extra PicoPoints</span>
@@ -485,9 +491,18 @@ export function PracticeMissionsPage() {
                 Random Missions
               </h2>
               <p className="text-[13px] leading-relaxed text-pico-secondary">
-                Want extra practice? Choose a short mission below.
+                Optional and separate from your focus mission — choose a short mission for extra
+                PicoPoints.
               </p>
             </div>
+
+            {extraPracticeActive ? (
+              <Card variant="blue" className="p-fade mb-4 px-4 py-2.5">
+                <span className="text-[12.5px] font-semibold text-[#2A60A8]">
+                  Extra practice selected. Pick a short mission below to keep going.
+                </span>
+              </Card>
+            ) : null}
 
             <div className="grid gap-3 md:grid-cols-3">
               {randomMissionCards.map((mission) => (

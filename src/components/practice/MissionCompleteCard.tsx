@@ -1,12 +1,13 @@
-import { CheckCircle2, NotebookTabs, Route, Shuffle } from 'lucide-react';
+import { CheckCircle2, Map, Plus, Route, Target } from 'lucide-react';
 import { missionComplete } from '../../data/mockMissions';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 
 type MissionCompleteCardProps = {
-  onContinueGrowthPath: () => void;
-  onTryRandomMission: () => void;
-  onReturnToNotebook: () => void;
+  onViewRoadmap: () => void;
+  onOpenGrowthMap: () => void;
+  onContinueExtraPractice: () => void;
+  onAddAnotherProblem: () => void;
   title?: string;
   copy?: string;
   stats?: Array<{
@@ -17,9 +18,10 @@ type MissionCompleteCardProps = {
 };
 
 export function MissionCompleteCard({
-  onContinueGrowthPath,
-  onTryRandomMission,
-  onReturnToNotebook,
+  onViewRoadmap,
+  onOpenGrowthMap,
+  onContinueExtraPractice,
+  onAddAnotherProblem,
   title = missionComplete.title,
   copy = missionComplete.copy,
   stats = missionComplete.stats,
@@ -51,17 +53,21 @@ export function MissionCompleteCard({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button size="sm" onClick={onContinueGrowthPath}>
+        <Button size="sm" onClick={onViewRoadmap}>
           <Route size={13} />
-          Continue Roadmap
+          View Roadmap
         </Button>
-        <Button variant="secondary" size="sm" onClick={onTryRandomMission}>
-          <Shuffle size={13} />
-          Try random mission
+        <Button variant="secondary" size="sm" onClick={onOpenGrowthMap}>
+          <Map size={13} />
+          Open Growth Map
         </Button>
-        <Button variant="ghost" size="sm" onClick={onReturnToNotebook}>
-          <NotebookTabs size={13} />
-          Return to notebook
+        <Button variant="secondary" size="sm" onClick={onContinueExtraPractice}>
+          <Target size={13} />
+          Continue with extra practice
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onAddAnotherProblem}>
+          <Plus size={13} />
+          Add another problem
         </Button>
       </div>
     </Card>
