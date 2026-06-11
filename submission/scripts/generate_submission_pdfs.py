@@ -14,14 +14,41 @@ Only the standard ReportLab toolkit is required:
 
 from __future__ import annotations
 
+import glob
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 from reportlab.lib.colors import HexColor
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas as canvas_mod
+
+
+def register_unicode_font() -> str | None:
+    """Register a TTF that contains the arrow glyph (U+2192). Returns the
+    font name to use, or None if none is available (caller falls back to a
+    vector-drawn arrow so the brief never breaks)."""
+    candidates: list[str] = []
+    for base in sys.path:
+        candidates += glob.glob(os.path.join(base, "**/DejaVuSans.ttf"), recursive=True)
+    candidates += [
+        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "/Library/Fonts/Arial Unicode.ttf",
+        "/System/Library/Fonts/SFNS.ttf",
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            try:
+                pdfmetrics.registerFont(TTFont("FlowUni", path))
+                return "FlowUni"
+            except Exception:
+                continue
+    return None
 from reportlab.platypus import (
     BaseDocTemplate,
     Frame,
@@ -277,16 +304,39 @@ def bullet(c, x, y, term, desc, width, size=8.5, leading=10.8):
     return y - 1.5
 
 
-def draw_arrow(c, ax, ay, ln=8):
+def draw_numbered(c, n, text, x, y, width, size=8.5, leading=10.8):
+    indent = c.stringWidth("8.  ", "Helvetica-Bold", size)
+    c.setFillColor(BLACK)
+    c.setFont("Helvetica-Bold", size)
+    c.drawString(x, y, f"{n}.")
+    c.setFillColor(BODY)
+    c.setFont("Helvetica", size)
+    for line in wrap_para(c, text, "Helvetica", size, width - indent):
+        c.drawString(x + indent, y, line)
+        y -= leading
+    return y - 2.0
+
+
+def draw_vector_arrow(c, ax, ay, ln=8):
     c.setStrokeColor(GREY)
-    c.setLineWidth(0.9)
+    c.setLineWidth(1.0)
     c.line(ax, ay, ax + ln, ay)
-    c.line(ax + ln - 2.6, ay + 2.2, ax + ln, ay)
-    c.line(ax + ln - 2.6, ay - 2.2, ax + ln, ay)
+    c.line(ax + ln - 2.7, ay + 2.4, ax + ln, ay)
+    c.line(ax + ln - 2.7, ay - 2.4, ax + ln, ay)
 
 
-def draw_flow_box(c, steps, x, y_top, width):
-    font, size, pad, line_h, arrow_w = "Helvetica-Bold", 7.6, 9, 12.5, 17
+def draw_flow_box(c, steps, x, y_top, width, uni_font=None):
+    """Render the demo flow as 'A -> B -> C' using real arrow glyphs when a
+    Unicode font is available, otherwise a clean vector arrow."""
+    font, size, pad, line_h = "Helvetica-Bold", 7.8, 9.5, 13.0
+    arrow = "→"
+    asize = 9.0
+    if uni_font:
+        arrow_w = c.stringWidth(arrow, uni_font, asize) + 9
+    else:
+        arrow_w = 17
+
+    # greedy wrap by advance width
     lines, cur, curw = [], [], 0.0
     for i, t in enumerate(steps):
         tw = c.stringWidth(t, font, size)
@@ -298,12 +348,14 @@ def draw_flow_box(c, steps, x, y_top, width):
         curw += adv
     if cur:
         lines.append(cur)
-    box_h = pad * 2 + len(lines) * line_h - (line_h - 9)
+
+    box_h = pad * 2 + (len(lines) - 1) * line_h + size + 2
     c.setFillColor(BOXBG)
     c.setStrokeColor(BOXBORDER)
     c.setLineWidth(0.8)
     c.roundRect(x, y_top - box_h, width, box_h, 5, fill=1, stroke=1)
-    ty = y_top - pad - 7.5
+
+    ty = y_top - pad - size
     for line in lines:
         tx = x + pad
         for (t, tw, idx) in line:
@@ -312,7 +364,12 @@ def draw_flow_box(c, steps, x, y_top, width):
             c.drawString(tx, ty, t)
             tx += tw
             if idx < len(steps) - 1:
-                draw_arrow(c, tx + 4.5, ty + 2.4, 8)
+                if uni_font:
+                    c.setFillColor(GREY)
+                    c.setFont(uni_font, asize)
+                    c.drawString(tx + 4.5, ty - 0.4, arrow)
+                else:
+                    draw_vector_arrow(c, tx + 4.5, ty + 2.4, 8)
                 tx += arrow_w
         ty -= line_h
     return y_top - box_h
@@ -323,6 +380,7 @@ def build_project_pdf():
     W, H = letter
     c.setTitle("PicoLab - Project Description")
     c.setAuthor("PicoLab")
+    uni_font = register_unicode_font()
 
     mx = 48
     gutter = 26
@@ -382,17 +440,17 @@ def build_project_pdf():
         lx, y, col_w)
 
     y -= 10
-    y = section_heading(c, "Solution", lx, y, col_w)
-    for s in [
-        "adding or scanning a STEM problem",
-        "confirming values, units, target variable, and formula",
-        "solving step-by-step in Smart Notebook",
-        "detecting learning signals",
-        "opening a contextual Visual Lab explanation",
-        "practicing through missions",
-        "tracking progress in Growth Map and Roadmap",
-    ]:
-        y = bullet(c, lx, y, "", s, col_w)
+    y = section_heading(c, "Solution — the student workflow", lx, y, col_w)
+    for i, s in enumerate([
+        "Add or scan a STEM problem",
+        "Confirm values, units, target variable, and formula",
+        "Solve step-by-step in Smart Notebook",
+        "Detect learning signals",
+        "Open a contextual Visual Lab explanation",
+        "Practice through missions",
+        "Track progress in Growth Map and Roadmap",
+    ], 1):
+        y = draw_numbered(c, i, s, lx, y, col_w)
 
     # ----- RIGHT COLUMN -----
     y = body_top
@@ -427,7 +485,7 @@ def build_project_pdf():
     y = section_heading(c, "Demo Flow", rx, y, col_w)
     steps = ["Problem", "Confirm", "Smart Notebook", "Learning Signal",
              "Visual Lab", "Practice Mission", "Growth Map", "Roadmap"]
-    y = draw_flow_box(c, steps, rx, y + 2, col_w)
+    y = draw_flow_box(c, steps, rx, y + 2, col_w, uni_font=uni_font)
 
     y -= 12
     y = section_heading(c, "Project Status", rx, y, col_w)
